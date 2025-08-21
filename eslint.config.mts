@@ -5,8 +5,13 @@ import stylistic from '@stylistic/eslint-plugin'
 import markdown from '@eslint/markdown'
 import css from '@eslint/css'
 import { defineConfig } from 'eslint/config'
+import { includeIgnoreFile } from '@eslint/compat'
+import { fileURLToPath } from 'node:url'
+
+const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url))
 
 export default defineConfig([
+  includeIgnoreFile(gitignorePath, 'Imported .gitignore patterns'),
   { files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'], plugins: { js }, extends: ['js/recommended'] },
   tseslint.configs.recommended,
   jsxA11y.flatConfigs.recommended,
