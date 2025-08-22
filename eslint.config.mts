@@ -18,4 +18,9 @@ export default defineConfig([
   stylistic.configs.recommended,
   { files: ['**/*.md'], plugins: { markdown }, language: 'markdown/gfm', extends: ['markdown/recommended'] },
   { files: ['**/*.css'], plugins: { css }, language: 'css/css', extends: ['css/recommended'] },
+  {
+    rules: {
+      'jsx-a11y/label-has-associated-control': 'off',
+    },
+  },
 ])
