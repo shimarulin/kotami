@@ -1,10 +1,11 @@
-import app from "ags/gtk4/app"
-import { Astal, Gtk, Gdk } from "ags/gtk4"
-import { execAsync } from "ags/process"
-import { createPoll } from "ags/time"
+/* eslint-disable jsx-a11y/label-has-associated-control */
+import app from 'ags/gtk4/app'
+import { Astal, Gtk, Gdk } from 'ags/gtk4'
+import { execAsync } from 'ags/process'
+import { createPoll } from 'ags/time'
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
-  const time = createPoll("", 1000, "date")
+  const time = createPoll('', 1000, 'date')
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
 
   return (
@@ -20,7 +21,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       <centerbox cssName="centerbox">
         <button
           $type="start"
-          onClicked={() => execAsync("echo hello").then(console.log)}
+          onClicked={() => execAsync('echo hello').then(console.log)}
           hexpand
           halign={Gtk.Align.CENTER}
         >
