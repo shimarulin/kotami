@@ -5,7 +5,14 @@ import { useUserListService } from '@services/UserListService'
 
 export default function UserCarousel() {
   let userListCarouselRef: Adw.Carousel | null = null
-  const { userList, selectedUserName, setSelectedUserName } = useUserListService()
+  const { userList, selectedUserIndex, setSelectedUserIndex } = useUserListService()
+
+  const scrollTo = (index: number, animation: boolean = true) => {
+    if (userListCarouselRef) {
+      const targetPage = userListCarouselRef.get_nth_page(index)
+      userListCarouselRef.scroll_to(targetPage, animation)
+    }
+  }
 
   return (
     <Gtk.Box orientation={Gtk.Orientation.HORIZONTAL}>
@@ -14,13 +21,10 @@ export default function UserCarousel() {
         onClicked={() => {
           if (userListCarouselRef) {
             if (userListCarouselRef.position > 0) {
-              const targetIndex = Math.ceil(userListCarouselRef.position) - 1
-              const targetPage = userListCarouselRef.get_nth_page(targetIndex)
-              userListCarouselRef.scroll_to(targetPage, true)
+              scrollTo(Math.ceil(userListCarouselRef.position) - 1)
             }
             else {
-              const targetPage = userListCarouselRef.get_nth_page(userList.get().length - 1)
-              userListCarouselRef.scroll_to(targetPage, true)
+              scrollTo(userList.get().length - 1)
             }
           }
         }}
@@ -29,19 +33,13 @@ export default function UserCarousel() {
         spacing={24}
         hexpand={true}
         halign={Gtk.Align.FILL}
+        scrollParams={new Adw.SpringParams(1, 0.5, 1000)}
         onRealize={(carousel) => {
           userListCarouselRef = carousel
-
-          const selectedUserNameString = selectedUserName.get()
-          const selectedUserListItemIndex = userList.get().findIndex(userListItem => userListItem.userName === selectedUserNameString)
-
-          if (selectedUserNameString && selectedUserListItemIndex !== carousel.position) {
-            const targetPage = userListCarouselRef.get_nth_page(selectedUserListItemIndex)
-            carousel.scroll_to(targetPage, false)
-          }
+          scrollTo(selectedUserIndex.get(), false)
         }}
         onPageChanged={(carousel) => {
-          setSelectedUserName(userList.get()[carousel.position].userName)
+          setSelectedUserIndex(Math.round(carousel.position))
         }}
       >
         <For each={userList}>
@@ -51,10 +49,7 @@ export default function UserCarousel() {
               onRealize={(box) => {
                 const gesture = new Gtk.GestureClick()
                 gesture.connect('released', () => {
-                  if (userListCarouselRef) {
-                    const targetPage = userListCarouselRef.get_nth_page(index.get())
-                    userListCarouselRef?.scroll_to(targetPage, true)
-                  }
+                  scrollTo(index.get())
                 })
                 box.add_controller(gesture)
               }}
@@ -72,13 +67,10 @@ export default function UserCarousel() {
         onClicked={() => {
           if (userListCarouselRef) {
             if (userListCarouselRef.position < userList.get().length - 1) {
-              const targetIndex = Math.floor(userListCarouselRef.position) + 1
-              const targetPage = userListCarouselRef.get_nth_page(targetIndex)
-              userListCarouselRef.scroll_to(targetPage, true)
+              scrollTo(Math.floor(userListCarouselRef.position) + 1)
             }
             else {
-              const targetPage = userListCarouselRef.get_nth_page(0)
-              userListCarouselRef.scroll_to(targetPage, true)
+              scrollTo(0)
             }
           }
         }}
