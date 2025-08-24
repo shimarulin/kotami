@@ -16,9 +16,7 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
       application={app}
     >
       <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
-        <Gtk.Box orientation={Gtk.Orientation.HORIZONTAL}>
-          <UserCarousel />
-        </Gtk.Box>
+        <UserCarousel />
         <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
           <Gtk.PasswordEntry showPeekIcon={true} placeholderText="Password"></Gtk.PasswordEntry>
         </Gtk.Box>
