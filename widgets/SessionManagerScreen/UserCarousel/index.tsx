@@ -1,11 +1,21 @@
+import app from 'ags/gtk4/app'
 import Adw from 'gi://Adw'
+import Pango from 'gi://Pango'
 import { For, Accessor, With, createState } from 'ags'
-import { Gtk } from 'ags/gtk4'
+import { Gdk, Gtk } from 'ags/gtk4'
 import { useUserListService } from '@services/UserListService'
+import scss from './style.scss'
+
+app.apply_css(scss)
 
 export default function UserCarousel() {
   const [userListCarousel, setUserListCarousel] = createState<Adw.Carousel | null>(null)
   const { userList, selectedUserIndex, setSelectedUserIndex } = useUserListService()
+
+  const navigationButtonProps: Partial<Gtk.Button> = {
+    cursor: new Gdk.Cursor({ name: 'pointer' }),
+    cssClasses: ['UserCarouselButton'],
+  }
 
   const scrollTo = (index: number, animation: boolean = true) => {
     const userListCarouselRef = userListCarousel.get()
@@ -14,6 +24,16 @@ export default function UserCarousel() {
       userListCarouselRef.scroll_to(targetPage, animation)
     }
   }
+
+  const UserNameLabel = (name: string) => (
+    <Gtk.Label
+      cssClasses={['UserCarouselCaption']}
+      label={name}
+      maxWidthChars={12}
+      widthRequest={220}
+      ellipsize={Pango.EllipsizeMode.END}
+    />
+  )
 
   return (
     <Gtk.Box orientation={Gtk.Orientation.HORIZONTAL}>
@@ -30,9 +50,11 @@ export default function UserCarousel() {
             }
           }
         }}
+        {...navigationButtonProps}
       />
       <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
         <Adw.Carousel
+          cssClasses={['UserCarousel']}
           spacing={24}
           hexpand={true}
           halign={Gtk.Align.FILL}
@@ -47,21 +69,30 @@ export default function UserCarousel() {
         >
           <For each={userList}>
             {(user, index: Accessor<number>) => (
-              <box
+              <Gtk.Box
                 name={`UserCard-${index.get()}`}
+                orientation={Gtk.Orientation.VERTICAL}
+                halign={Gtk.Align.CENTER}
                 onRealize={(box) => {
-                  const gesture = new Gtk.GestureClick()
+                  const gesture = new Gtk.GestureClick({ propagationPhase: Gtk.PropagationPhase.BUBBLE })
                   gesture.connect('released', () => {
                     scrollTo(index.get())
                   })
                   box.add_controller(gesture)
                 }}
+                cursor={new Gdk.Cursor({ name: 'pointer' })}
+                widthRequest={220}
               >
-                <Gtk.Box orientation={Gtk.Orientation.VERTICAL}>
-                  <Adw.Avatar size={128} text={user.realName} showInitials={true} customImage={user.userPicture}></Adw.Avatar>
-                  <Gtk.Label label={user.realName} />
+                <Adw.Avatar size={172} text={user.realName} showInitials={true} customImage={user.userPicture}></Adw.Avatar>
+                <Gtk.Box
+                  orientation={Gtk.Orientation.VERTICAL}
+                  vexpand={true}
+                  halign={Gtk.Align.CENTER}
+                  valign={Gtk.Align.CENTER}
+                >
+                  {user.realName.length > 14 ? user.realName.split(' ').map(UserNameLabel) : UserNameLabel(user.realName)}
                 </Gtk.Box>
-              </box>
+              </Gtk.Box>
             )}
           </For>
         </Adw.Carousel>
@@ -82,6 +113,7 @@ export default function UserCarousel() {
             }
           }
         }}
+        {...navigationButtonProps}
       />
     </Gtk.Box>
   )

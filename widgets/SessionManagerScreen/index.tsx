@@ -1,6 +1,6 @@
 import app from 'ags/gtk4/app'
 import { Astal, Gtk, Gdk } from 'ags/gtk4'
-import UserCarousel from '@widgets/UserCarousel'
+import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
 
 export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor
