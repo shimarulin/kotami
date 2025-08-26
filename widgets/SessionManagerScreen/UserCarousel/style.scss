@@ -17,6 +17,15 @@
 }
 
 .UserCarousel {
+  .UserCarouselSlide avatar {
+    transition: all 100ms ease-in-out;
+    transform: scale(0.85);
+  }
+
+  .UserCarouselSlideActive avatar {
+    transform: scale(1);
+  }
+
   .UserCarouselCaption {
     font-size: 1.75em;
     line-height: 1.25;
