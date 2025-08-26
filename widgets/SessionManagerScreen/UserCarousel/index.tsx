@@ -86,6 +86,7 @@ export default function UserCarousel() {
                 cssClasses={['UserCarouselSlide']}
                 orientation={Gtk.Orientation.VERTICAL}
                 halign={Gtk.Align.CENTER}
+                vexpand={false}
                 onRealize={(box) => {
                   userListCarouselChildrens.push(box)
                   const gesture = new Gtk.GestureClick({ propagationPhase: Gtk.PropagationPhase.BUBBLE })
