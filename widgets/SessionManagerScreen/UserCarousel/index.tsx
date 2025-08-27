@@ -126,7 +126,7 @@ export default function UserCarousel() {
                   orientation={Gtk.Orientation.VERTICAL}
                   vexpand={true}
                   halign={Gtk.Align.CENTER}
-                  valign={Gtk.Align.START}
+                  valign={Gtk.Align.CENTER}
                 >
                   {user.realName.length > 14 ? user.realName.split(' ').map(UserNameLabel) : UserNameLabel(user.realName)}
                 </Gtk.Box>
