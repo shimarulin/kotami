@@ -3,5 +3,8 @@
     "eslint.format.enable": true,
     "[typescript]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
     }
 }

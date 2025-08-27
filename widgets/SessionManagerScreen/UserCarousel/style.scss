@@ -3,6 +3,8 @@
 .UserCarouselButton {
   background-color: transparent;
   border-radius: 0px;
+  padding-top: 62px;
+  padding-bottom: 180px;
 
   & image {
     padding: 16px;
@@ -26,8 +28,13 @@
     transform: scale(1);
   }
 
-  .UserCarouselCaption {
-    font-size: 1.75em;
-    line-height: 1.25;
+  .UserCarouselCaptionContainer {
+    padding-top: 8px;
+    padding-bottom: 12px;
+
+    .UserCarouselCaption {
+      font-size: 1.75em;
+      line-height: 1.25;
+    }
   }
 }

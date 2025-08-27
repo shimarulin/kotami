@@ -1,0 +1,14 @@
+.SessionManagerScreen {
+  .SessionManagerContainer {
+    .SessionManagerView {
+      .SessionManagerFields {
+        margin-top: 4em;
+        margin-bottom: 2em;
+
+        .UserPasswordEntry {
+          font-family: var(--monospace-font-family);
+        }
+      }
+    }
+  }
+}

@@ -110,13 +110,21 @@ export default function UserCarousel() {
                 }}
                 cursor={new Gdk.Cursor({ name: 'pointer' })}
                 widthRequest={220}
+                heightRequest={270}
               >
-                <Adw.Avatar size={172} text={user.realName} showInitials={true} customImage={user.userPicture}></Adw.Avatar>
+                <Adw.Avatar
+                  size={172}
+                  text={user.realName}
+                  showInitials={true}
+                  customImage={user.userPicture}
+                >
+                </Adw.Avatar>
                 <Gtk.Box
+                  cssClasses={['UserCarouselCaptionContainer']}
                   orientation={Gtk.Orientation.VERTICAL}
                   vexpand={true}
                   halign={Gtk.Align.CENTER}
-                  valign={Gtk.Align.CENTER}
+                  valign={Gtk.Align.START}
                 >
                   {user.realName.length > 14 ? user.realName.split(' ').map(UserNameLabel) : UserNameLabel(user.realName)}
                 </Gtk.Box>
