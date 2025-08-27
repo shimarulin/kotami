@@ -33,7 +33,9 @@ export default function UserCarousel() {
   })
 
   userListCarouselChildrens.subscribe(() => {
-    setUserListCarouselChildrenProps(selectedUserIndex.get())
+    if (userListCarouselChildrens.get().length === userList.get().length) {
+      setUserListCarouselChildrenProps(selectedUserIndex.get())
+    }
   })
 
   const navigationButtonProps: Partial<Gtk.Button> = {
