@@ -90,8 +90,7 @@ export default function UserCarousel() {
             scrollTo(selectedUserIndex.get(), false)
           }}
           onPageChanged={(carousel) => {
-            const position = Math.round(carousel.position)
-            setSelectedUserIndex(position)
+            setSelectedUserIndex(Math.round(carousel.position))
           }}
         >
           <For each={userList}>
@@ -104,16 +103,16 @@ export default function UserCarousel() {
                 vexpand={false}
                 onRealize={(box) => {
                   setUserListCarouselChildrens([...userListCarouselChildrens.get(), box])
-                  const gesture = new Gtk.GestureClick({ propagationPhase: Gtk.PropagationPhase.BUBBLE })
-                  gesture.connect('released', () => {
-                    setSelectedUserIndex(index.get())
-                  })
-                  box.add_controller(gesture)
                 }}
                 cursor={new Gdk.Cursor({ name: 'pointer' })}
                 widthRequest={220}
                 heightRequest={270}
               >
+                <Gtk.GestureClick
+                  onReleased={() => {
+                    setSelectedUserIndex(index.get())
+                  }}
+                />
                 <Adw.Avatar
                   size={172}
                   text={user.realName}

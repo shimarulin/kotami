@@ -1,12 +1,15 @@
 import app from 'ags/gtk4/app'
 import { Astal, Gtk, Gdk } from 'ags/gtk4'
+import { gettext as _ } from 'gettext'
 import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
+import { useSessionListService } from '@services/SessionListService'
 import scss from './style.scss'
 
 app.apply_css(scss)
 
 export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor
+  const { sessionList } = useSessionListService()
 
   return (
     <Astal.Window
@@ -40,7 +43,18 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
             hexpand={false}
             halign={Gtk.Align.CENTER}
           >
-            <Gtk.PasswordEntry cssClasses={['UserPasswordEntry']} showPeekIcon={true} placeholderText="Password"></Gtk.PasswordEntry>
+            <Gtk.DropDown
+              cssClasses={['SessionManagerField']}
+              model={Gtk.StringList.new(sessionList.get().map(s => s.name || ''))}
+              onNotifySelectedItem={(s) => {
+                console.log(s.selected)
+              }}
+            />
+            <Gtk.PasswordEntry
+              cssClasses={['SessionManagerField', 'UserPasswordEntry']}
+              showPeekIcon={true}
+              placeholderText={_('Password')}
+            />
           </Gtk.Box>
         </Gtk.Box>
       </Gtk.Box>

@@ -1,4 +1,4 @@
-import { createState } from 'ags'
+import { createState, createComputed } from 'ags'
 import { readPasswdToJson } from '@utils/readPasswdToJson'
 import { createUserList, UserListItem } from './createUserList'
 
@@ -8,7 +8,8 @@ const [selectedUserIndex, setSelectedUserIndex] = createState<number>(0)
 // const [selectedUserSession, setSelectedUserSession] = createState<string | null>(null)
 const [userList, setUserList] = createState<UserListItem[]>([])
 
-const selectedUser = selectedUserIndex(index => userList.get()[index])
+// const selectedUser = selectedUserIndex(index => userList.get()[index])
+const selectedUser = createComputed(get => get(userList)[get(selectedUserIndex)])
 
 const setSelectedUserIndexByUserName = (userName: string) => {
   const index = userList.get().findIndex(user => user.userName === userName)

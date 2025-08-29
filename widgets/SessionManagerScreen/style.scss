@@ -2,8 +2,12 @@
   .SessionManagerContainer {
     .SessionManagerView {
       .SessionManagerFields {
-        margin-top: 3em;
+        margin-top: 2em;
         margin-bottom: 2em;
+
+        .SessionManagerField {
+          margin-top: 1em;
+        }
 
         .UserPasswordEntry {
           font-family: var(--monospace-font-family);
