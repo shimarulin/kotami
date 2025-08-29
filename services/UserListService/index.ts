@@ -1,15 +1,12 @@
-import { createState, createComputed } from 'ags'
+import { createState } from 'ags'
 import { readPasswdToJson } from '@utils/readPasswdToJson'
 import { createUserList, UserListItem } from './createUserList'
+import { useLoginStorageService } from '@services/LoginStorageService'
 
-// const [activeUserName, setActiveUserName] = createState<string | null>(null)
-// const [activeUserSession, setActiveUserSession] = createState<string | null>(null)
-const [selectedUserIndex, setSelectedUserIndex] = createState<number>(0)
-// const [selectedUserSession, setSelectedUserSession] = createState<string | null>(null)
 const [userList, setUserList] = createState<UserListItem[]>([])
+const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)
 
-// const selectedUser = selectedUserIndex(index => userList.get()[index])
-const selectedUser = createComputed(get => get(userList)[get(selectedUserIndex)])
+const selectedUser = selectedUserIndex(index => userList.get()[index])
 
 const setSelectedUserIndexByUserName = (userName: string) => {
   const index = userList.get().findIndex(user => user.userName === userName)
@@ -17,22 +14,23 @@ const setSelectedUserIndexByUserName = (userName: string) => {
 }
 
 const useUserListService = () => {
+  const { cachedLoginStorageRecord } = useLoginStorageService()
   if (userList.get().length === 0) {
     setUserList(createUserList(readPasswdToJson()))
   }
 
   // TODO: fill from active session
-  const activeUserNameString: string | null = null
+  const activeUserNameString: string | undefined = undefined
   // TODO: fill from cache file
-  const selectedUserNameString: string | null = null
+  const selectedUserNameString: string | undefined = cachedLoginStorageRecord.get()?.user
 
-  if (activeUserNameString) {
+  if (activeUserNameString && selectedUserIndex.get() < 0) {
     setSelectedUserIndexByUserName(activeUserNameString)
   }
-  else if (selectedUserNameString) {
+  else if (selectedUserNameString && selectedUserIndex.get() < 0) {
     setSelectedUserIndexByUserName(selectedUserNameString)
   }
-  else {
+  else if (selectedUserIndex.get() < 0) {
     setSelectedUserIndex(0)
   }
 

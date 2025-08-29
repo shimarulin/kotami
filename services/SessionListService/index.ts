@@ -1,34 +1,37 @@
-import { createState, createComputed } from 'ags'
+import { createState } from 'ags'
+import { useLoginStorageService } from '@services/LoginStorageService'
 import { type DesktopFileInfo } from '@utils/parseDesktopFiles.v3'
 import { createSessionList } from './createSessionList'
 
 const [sessionList, setSessionList] = createState<DesktopFileInfo[]>([])
-const [selectedSessionIndex, setSelectedSessionIndex] = createState<number>(0)
+const [selectedSessionIndex, setSelectedSessionIndex] = createState<number>(-1)
 
-const selectedSession = createComputed(get => get(sessionList)[get(selectedSessionIndex)])
+const selectedSession = selectedSessionIndex(index => sessionList.get()[index])
 
 const setSelectedSessionIndexByPath = (path: string) => {
   const index = sessionList.get().findIndex(session => session.path === path)
+
   setSelectedSessionIndex(index >= 0 ? index : 0)
 }
 
 const useSessionListService = () => {
+  const { cachedLoginStorageRecord } = useLoginStorageService()
   if (sessionList.get().length === 0) {
     setSessionList(createSessionList())
   }
 
   // TODO: fill from active session
-  const activeSessionRecord: string | null = null
+  const activeSessionRecord: string | undefined = undefined
   // TODO: fill from cache file
-  const selectedSessionRecord: string | null = null
+  const selectedSessionRecord: string | undefined = cachedLoginStorageRecord.get()?.sessionPath
 
-  if (activeSessionRecord) {
+  if (activeSessionRecord && selectedSessionIndex.get() < 0) {
     setSelectedSessionIndexByPath(activeSessionRecord)
   }
-  else if (selectedSessionRecord) {
+  else if (selectedSessionRecord && selectedSessionIndex.get() < 0) {
     setSelectedSessionIndexByPath(selectedSessionRecord)
   }
-  else {
+  else if (selectedSessionIndex.get() < 0) {
     setSelectedSessionIndex(0)
   }
 
