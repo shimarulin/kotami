@@ -53,7 +53,6 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
               }}
               visible={sessionList.get().length > 1}
             />
-            <Gtk.Entry />
             <Gtk.PasswordEntry
               cssClasses={['SessionManagerField', 'UserPasswordEntry']}
               showPeekIcon={true}
