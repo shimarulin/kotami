@@ -1,7 +1,8 @@
 import { createState } from 'ags'
 import { readPasswdToJson } from '@utils/readPasswdToJson'
-import { createUserList, UserListItem } from './createUserList'
+import { createUserList } from './createUserList'
 import { useLoginStorageService } from '@services/LoginStorageService'
+import { UserListItem } from './types'
 
 const [userList, setUserList] = createState<UserListItem[]>([])
 const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)

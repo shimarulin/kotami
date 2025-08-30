@@ -2,6 +2,12 @@
 
 > Yet Another Shell
 
+Dependencies:
+- "niri"
+- "aylurs-gtk-shell-git"
+- "libastal-greetd-git"
+- "libadwaita"
+
 ## Development
 
 ### Documentation

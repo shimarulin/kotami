@@ -1,1 +1,1 @@
-export const STATE_FILE = '/var/lib/greetd/laststate'
+export const STATE_FILE = '/var/lib/kotami/state'

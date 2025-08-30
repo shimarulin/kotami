@@ -1,12 +1,6 @@
-import { Gdk } from 'ags/gtk4'
 import { PasswdRecord } from '@utils/readPasswdToJson'
 import { createImagePainitable } from '@utils/createImagePainitable'
-
-export interface UserListItem {
-  userName: string
-  realName: string
-  userPicture?: Gdk.Paintable
-}
+import { UserListItem } from './types'
 
 const createUserListItem = (passwdRecord: PasswdRecord): UserListItem => {
   return {

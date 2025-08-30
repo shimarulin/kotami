@@ -41,6 +41,7 @@ export default function UserCarousel() {
   const navigationButtonProps: Partial<Gtk.Button> = {
     cursor: new Gdk.Cursor({ name: 'pointer' }),
     cssClasses: ['UserCarouselButton'],
+    visible: userList.get().length > 1,
   }
 
   const scrollTo = (index: number, animation: boolean = true) => {
@@ -104,7 +105,7 @@ export default function UserCarousel() {
                 onRealize={(box) => {
                   setUserListCarouselChildrens([...userListCarouselChildrens.get(), box])
                 }}
-                cursor={new Gdk.Cursor({ name: 'pointer' })}
+                cursor={userList.get().length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' })}
                 widthRequest={220}
                 heightRequest={270}
               >
@@ -134,7 +135,7 @@ export default function UserCarousel() {
           </For>
         </Adw.Carousel>
         <With value={userListCarousel}>
-          {value => value instanceof Adw.Carousel && <Adw.CarouselIndicatorDots carousel={value} /> }
+          {value => value instanceof Adw.Carousel && <Adw.CarouselIndicatorDots carousel={value} visible={userList.get().length > 1} /> }
         </With>
       </Gtk.Box>
       <Gtk.Button

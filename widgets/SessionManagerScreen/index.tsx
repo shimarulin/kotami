@@ -1,9 +1,9 @@
 import app from 'ags/gtk4/app'
 import { Astal, Gtk, Gdk } from 'ags/gtk4'
-import { gettext as _ } from 'gettext'
+// import { gettext as _ } from 'gettext'
 import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
 import { useSessionListService } from '@services/SessionListService'
-import { writeLoginStorageState } from '@services/LoginStorageService/writeLoginStorageState'
+// import { writeLoginStorageState } from '@services/LoginStorageService/writeLoginStorageState'
 import scss from './style.scss'
 
 app.apply_css(scss)
@@ -51,12 +51,17 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
               onNotifySelectedItem={(s) => {
                 setSelectedSessionIndex(s.selected)
               }}
+              visible={sessionList.get().length > 1}
             />
+            <Gtk.Entry />
             <Gtk.PasswordEntry
               cssClasses={['SessionManagerField', 'UserPasswordEntry']}
               showPeekIcon={true}
-              placeholderText={_('Password')}
-              onActivate={writeLoginStorageState}
+              canFocus={true}
+              sensitive={true}
+              onRealize={(passwordEntry) => {
+                passwordEntry.grab_focus()
+              }}
             />
           </Gtk.Box>
         </Gtk.Box>
