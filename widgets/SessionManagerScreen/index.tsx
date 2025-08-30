@@ -18,8 +18,10 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
       name="SessionManagerScreen"
       class="SessionManagerScreen"
       gdkmonitor={gdkmonitor}
+      // exclusivity={Astal.Exclusivity.IGNORE}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT | BOTTOM}
+      keymode={Astal.Keymode.ON_DEMAND}
       application={app}
     >
       <Gtk.Box
