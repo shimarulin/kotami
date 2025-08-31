@@ -4,6 +4,7 @@
     "gnim": "*"
   },
   "scripts": {
+    "preinstall": "ags types -u -d .",
     "prebuild": "mkdir -p ./output",
     "build": "ags bundle ./apps/LoginScreen/app.ts ./output/greeter"
   },
