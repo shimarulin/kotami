@@ -9,10 +9,10 @@
     "jsx": "react-jsx",
     "jsxImportSource": "ags/gtk4",
     "paths": {
-      "@apps/*": ["./apps/*"],
-      "@services/*": ["./services/*"],
-      "@utils/*": ["./utils/*"],
-      "@widgets/*": ["./widgets/*"],
+      "@apps/*": ["./ns/apps/*"],
+      "@services/*": ["./ns/services/*"],
+      "@utils/*": ["./ns/utils/*"],
+      "@widgets/*": ["./ns/widgets/*"],
     }
   }
 }
