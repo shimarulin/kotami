@@ -4,13 +4,18 @@ import { useUserListService } from '@services/UserListService'
 import { useSessionListService } from '@services/SessionListService'
 import { STATE_FILE } from './constants'
 import { type LoginStorageRecord } from './types'
+import { useLoginStorageService } from '.'
 
 export function writeLoginStorageState() {
   const { selectedUser } = useUserListService()
   const { selectedSession } = useSessionListService()
+  const { cachedLoginStorageRecord } = useLoginStorageService()
   const state: LoginStorageRecord = {
     user: selectedUser.get().userName,
-    sessionPath: selectedSession.get().path,
+    sessions: {
+      ...(cachedLoginStorageRecord.get()?.sessions),
+      [selectedUser.get().userName]: selectedSession.get().path,
+    },
   }
 
   const file = Gio.File.new_for_path(STATE_FILE)

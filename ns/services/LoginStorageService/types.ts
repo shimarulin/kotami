@@ -1,4 +1,6 @@
 export interface LoginStorageRecord {
   user: string
-  sessionPath: string
+  sessions: {
+    [user: string]: string
+  }
 }

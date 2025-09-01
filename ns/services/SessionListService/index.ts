@@ -1,7 +1,10 @@
-import { createState } from 'ags'
+import { Accessor, createState } from 'ags'
 import { useLoginStorageService } from '@services/LoginStorageService'
 import { type DesktopFileInfo } from '@utils/parseDesktopFiles.v3'
 import { createSessionList } from './createSessionList'
+import { useUserListService } from '@services/UserListService'
+import { UserListItem } from '@services/UserListService/types'
+import { LoginStorageRecord } from '@services/LoginStorageService/types'
 
 const [sessionList, setSessionList] = createState<DesktopFileInfo[]>([])
 const [selectedSessionIndex, setSelectedSessionIndex] = createState<number>(-1)
@@ -14,16 +17,26 @@ const setSelectedSessionIndexByPath = (path: string) => {
   setSelectedSessionIndex(index >= 0 ? index : 0)
 }
 
+const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageRecord | null>,
+  selectedUser: Accessor<UserListItem>,
+) => {
+  const sessions = cachedLoginStorageRecord.get()?.sessions
+  const userName = selectedUser.get().userName
+  return sessions && sessions[userName]
+}
+
+let selectedUserUnsubscribe: () => void | undefined
+
 const useSessionListService = () => {
   const { cachedLoginStorageRecord } = useLoginStorageService()
+  const { selectedUser } = useUserListService()
   if (sessionList.get().length === 0) {
     setSessionList(createSessionList())
   }
 
   // TODO: fill from active session
   const activeSessionRecord: string | undefined = undefined
-  // TODO: fill from cache file
-  const selectedSessionRecord: string | undefined = cachedLoginStorageRecord.get()?.sessionPath
+  const selectedSessionRecord: string | undefined = getCashedSessionByUser(cachedLoginStorageRecord, selectedUser)
 
   if (activeSessionRecord && selectedSessionIndex.get() < 0) {
     setSelectedSessionIndexByPath(activeSessionRecord)
@@ -33,6 +46,21 @@ const useSessionListService = () => {
   }
   else if (selectedSessionIndex.get() < 0) {
     setSelectedSessionIndex(0)
+  }
+
+  if (!selectedUserUnsubscribe) {
+    selectedUserUnsubscribe = selectedUser.subscribe(() => {
+      const user = selectedUser.get()
+      const loginCache = cachedLoginStorageRecord.get()
+      const cachedSessionPath = loginCache && loginCache.sessions[user.userName]
+
+      if (cachedSessionPath) {
+        setSelectedSessionIndexByPath(cachedSessionPath)
+      }
+      else {
+        setSelectedSessionIndex(0)
+      }
+    })
   }
 
   return {

@@ -1,8 +1,9 @@
-import { createState } from 'ags'
+import { Accessor, createState } from 'ags'
 import { readPasswdToJson } from '@utils/readPasswdToJson'
 import { createUserList } from './createUserList'
 import { useLoginStorageService } from '@services/LoginStorageService'
 import { UserListItem } from './types'
+import { LoginStorageRecord } from '@services/LoginStorageService/types'
 
 const [userList, setUserList] = createState<UserListItem[]>([])
 const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)
@@ -14,6 +15,10 @@ const setSelectedUserIndexByUserName = (userName: string) => {
   setSelectedUserIndex(index >= 0 ? index : 0)
 }
 
+const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageRecord | null>) => {
+  return cachedLoginStorageRecord.get()?.user
+}
+
 const useUserListService = () => {
   const { cachedLoginStorageRecord } = useLoginStorageService()
   if (userList.get().length === 0) {
@@ -22,8 +27,7 @@ const useUserListService = () => {
 
   // TODO: fill from active session
   const activeUserNameString: string | undefined = undefined
-  // TODO: fill from cache file
-  const selectedUserNameString: string | undefined = cachedLoginStorageRecord.get()?.user
+  const selectedUserNameString: string | undefined = getCashedSessionByUser(cachedLoginStorageRecord)
 
   if (activeUserNameString && selectedUserIndex.get() < 0) {
     setSelectedUserIndexByUserName(activeUserNameString)
