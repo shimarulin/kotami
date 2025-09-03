@@ -1,7 +1,7 @@
 import app from 'ags/gtk4/app'
 import Adw from 'gi://Adw'
 import Pango from 'gi://Pango'
-import { For, Accessor, With, createState, onCleanup } from 'ags'
+import { For, With, createState, onCleanup, createComputed } from 'ags'
 import { Gdk, Gtk } from 'ags/gtk4'
 import { useUserListService } from '@services/UserListService'
 import scss from './style.scss'
@@ -22,25 +22,11 @@ const UserNameLabel = (name: string) => (
 export default function UserCarousel() {
   const { userList, selectedUserIndex, setSelectedUserIndex } = useUserListService()
   const [userListCarousel, setUserListCarousel] = createState<Adw.Carousel | null>(null)
-  const [userListCarouselChildrens, setUserListCarouselChildrens] = createState<Gtk.Box[]>([])
 
   const navigationButtonProps: Partial<Gtk.Button> = {
     cursor: new Gdk.Cursor({ name: 'pointer' }),
     cssClasses: ['UserCarouselButton'],
     visible: userList.get().length > 1,
-  }
-
-  const setUserListCarouselChildrenProps = (position: number) => {
-    userListCarouselChildrens.get().forEach((box, index) => {
-      if (position === index) {
-        box.add_css_class('UserCarouselSlideActive')
-        box.set_opacity(1)
-      }
-      else {
-        box.remove_css_class('UserCarouselSlideActive')
-        box.set_opacity(0.5)
-      }
-    })
   }
 
   const scrollTo = (index: number, animation: boolean = true) => {
@@ -56,12 +42,6 @@ export default function UserCarousel() {
   disposes.push(selectedUserIndex.subscribe(() => {
     const position = selectedUserIndex.get()
     scrollTo(position)
-    setUserListCarouselChildrenProps(position)
-  }))
-  disposes.push(userListCarouselChildrens.subscribe(() => {
-    if (userListCarouselChildrens.get().length === userList.get().length) {
-      setUserListCarouselChildrenProps(selectedUserIndex.get())
-    }
   }))
 
   onCleanup(() => {
@@ -101,19 +81,22 @@ export default function UserCarousel() {
           }}
         >
           <For each={userList}>
-            {(user, index: Accessor<number>) => (
+            {(user, index) => (
               <Gtk.Box
-                name={`UserCard-${index.get()}`}
-                cssClasses={['UserCarouselSlide']}
+                cssClasses={createComputed([selectedUserIndex, index], (n, i) => {
+                  const classList: string[] = ['UserCarouselSlide']
+                  if (n === i) {
+                    classList.push('UserCarouselSlideActive')
+                  }
+                  return classList
+                })}
                 orientation={Gtk.Orientation.VERTICAL}
                 halign={Gtk.Align.CENTER}
                 vexpand={false}
-                onRealize={(box) => {
-                  setUserListCarouselChildrens([...userListCarouselChildrens.get(), box])
-                }}
                 cursor={userList.get().length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' })}
                 widthRequest={220}
                 heightRequest={270}
+                opacity={createComputed([selectedUserIndex, index], (n, i) => n === i ? 1 : 0.5)}
               >
                 <Gtk.GestureClick
                   onReleased={() => {
