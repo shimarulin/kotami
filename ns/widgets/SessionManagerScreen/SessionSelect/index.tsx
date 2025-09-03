@@ -1,6 +1,6 @@
 import { Gtk } from 'ags/gtk4'
 import { useSessionListService } from '@services/SessionListService'
-import { Accessor } from 'ags'
+import { Accessor, onCleanup } from 'ags'
 import { createComputedArray, toAccessor } from '@libs/gnim-extensions'
 
 export interface SessionSelectProps {
@@ -8,7 +8,11 @@ export interface SessionSelectProps {
 }
 
 export default function SessionSelect({ cssClasses }: SessionSelectProps) {
-  const { sessionList, selectedSessionIndex, setSelectedSessionIndex } = useSessionListService()
+  const { sessionList, selectedSessionIndex, setSelectedSessionIndex, disposeSessionListService } = useSessionListService()
+
+  onCleanup(() => {
+    disposeSessionListService()
+  })
 
   return (
     <Gtk.DropDown

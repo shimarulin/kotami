@@ -26,9 +26,8 @@ const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageR
   return sessions && sessions[userName]
 }
 
-const [disposes, disposeSessionListService] = createDisposeManager()
-
 const useSessionListService = () => {
+  const [disposes, disposeSessionListService] = createDisposeManager()
   const { cachedLoginStorageRecord } = useLoginStorageService()
   const { selectedUser } = useUserListService()
   if (sessionList.get().length === 0) {
