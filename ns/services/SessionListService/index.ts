@@ -5,6 +5,7 @@ import { createSessionList } from './createSessionList'
 import { useUserListService } from '@services/UserListService'
 import { UserListItem } from '@services/UserListService/types'
 import { LoginStorageRecord } from '@services/LoginStorageService/types'
+import { createDisposeManager } from '@libs/gnim-extensions'
 
 const [sessionList, setSessionList] = createState<DesktopFileInfo[]>([])
 const [selectedSessionIndex, setSelectedSessionIndex] = createState<number>(-1)
@@ -25,7 +26,7 @@ const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageR
   return sessions && sessions[userName]
 }
 
-let selectedUserUnsubscribe: () => void | undefined
+const [disposes, disposeSessionListService] = createDisposeManager()
 
 const useSessionListService = () => {
   const { cachedLoginStorageRecord } = useLoginStorageService()
@@ -48,26 +49,25 @@ const useSessionListService = () => {
     setSelectedSessionIndex(0)
   }
 
-  if (!selectedUserUnsubscribe) {
-    selectedUserUnsubscribe = selectedUser.subscribe(() => {
-      const user = selectedUser.get()
-      const loginCache = cachedLoginStorageRecord.get()
-      const cachedSessionPath = loginCache && loginCache.sessions[user.userName]
+  disposes.push(selectedUser.subscribe(() => {
+    const user = selectedUser.get()
+    const loginCache = cachedLoginStorageRecord.get()
+    const cachedSessionPath = loginCache && loginCache.sessions[user.userName]
 
-      if (cachedSessionPath) {
-        setSelectedSessionIndexByPath(cachedSessionPath)
-      }
-      else {
-        setSelectedSessionIndex(0)
-      }
-    })
-  }
+    if (cachedSessionPath) {
+      setSelectedSessionIndexByPath(cachedSessionPath)
+    }
+    else {
+      setSelectedSessionIndex(0)
+    }
+  }))
 
   return {
     sessionList,
     selectedSession,
     selectedSessionIndex,
     setSelectedSessionIndex,
+    disposeSessionListService,
   }
 }
 

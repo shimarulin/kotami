@@ -1,47 +1,46 @@
 import app from 'ags/gtk4/app'
 import Adw from 'gi://Adw'
 import Pango from 'gi://Pango'
-import { For, Accessor, With, createState } from 'ags'
+import { For, Accessor, With, createState, onCleanup } from 'ags'
 import { Gdk, Gtk } from 'ags/gtk4'
 import { useUserListService } from '@services/UserListService'
 import scss from './style.scss'
+import { createDisposeManager } from '@libs/gnim-extensions'
 
 app.apply_css(scss)
+
+const UserNameLabel = (name: string) => (
+  <Gtk.Label
+    cssClasses={['UserCarouselCaption']}
+    label={name}
+    maxWidthChars={12}
+    widthRequest={220}
+    ellipsize={Pango.EllipsizeMode.END}
+  />
+)
 
 export default function UserCarousel() {
   const { userList, selectedUserIndex, setSelectedUserIndex } = useUserListService()
   const [userListCarousel, setUserListCarousel] = createState<Adw.Carousel | null>(null)
   const [userListCarouselChildrens, setUserListCarouselChildrens] = createState<Gtk.Box[]>([])
 
+  const navigationButtonProps: Partial<Gtk.Button> = {
+    cursor: new Gdk.Cursor({ name: 'pointer' }),
+    cssClasses: ['UserCarouselButton'],
+    visible: userList.get().length > 1,
+  }
+
   const setUserListCarouselChildrenProps = (position: number) => {
     userListCarouselChildrens.get().forEach((box, index) => {
       if (position === index) {
-        box.set_opacity(1)
         box.add_css_class('UserCarouselSlideActive')
+        box.set_opacity(1)
       }
       else {
         box.remove_css_class('UserCarouselSlideActive')
         box.set_opacity(0.5)
       }
     })
-  }
-
-  selectedUserIndex.subscribe(() => {
-    const position = selectedUserIndex.get()
-    scrollTo(position)
-    setUserListCarouselChildrenProps(position)
-  })
-
-  userListCarouselChildrens.subscribe(() => {
-    if (userListCarouselChildrens.get().length === userList.get().length) {
-      setUserListCarouselChildrenProps(selectedUserIndex.get())
-    }
-  })
-
-  const navigationButtonProps: Partial<Gtk.Button> = {
-    cursor: new Gdk.Cursor({ name: 'pointer' }),
-    cssClasses: ['UserCarouselButton'],
-    visible: userList.get().length > 1,
   }
 
   const scrollTo = (index: number, animation: boolean = true) => {
@@ -52,15 +51,22 @@ export default function UserCarousel() {
     }
   }
 
-  const UserNameLabel = (name: string) => (
-    <Gtk.Label
-      cssClasses={['UserCarouselCaption']}
-      label={name}
-      maxWidthChars={12}
-      widthRequest={220}
-      ellipsize={Pango.EllipsizeMode.END}
-    />
-  )
+  const [disposes, dispose] = createDisposeManager()
+
+  disposes.push(selectedUserIndex.subscribe(() => {
+    const position = selectedUserIndex.get()
+    scrollTo(position)
+    setUserListCarouselChildrenProps(position)
+  }))
+  disposes.push(userListCarouselChildrens.subscribe(() => {
+    if (userListCarouselChildrens.get().length === userList.get().length) {
+      setUserListCarouselChildrenProps(selectedUserIndex.get())
+    }
+  }))
+
+  onCleanup(() => {
+    dispose()
+  })
 
   return (
     <Gtk.Box orientation={Gtk.Orientation.HORIZONTAL}>

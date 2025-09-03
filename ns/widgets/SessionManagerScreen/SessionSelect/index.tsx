@@ -1,6 +1,6 @@
 import { Gtk } from 'ags/gtk4'
 import { useSessionListService } from '@services/SessionListService'
-import { Accessor, createState } from 'ags'
+import { Accessor } from 'ags'
 import { createComputedArray, toAccessor } from '@libs/gnim-extensions'
 
 export interface SessionSelectProps {
@@ -9,16 +9,6 @@ export interface SessionSelectProps {
 
 export default function SessionSelect({ cssClasses }: SessionSelectProps) {
   const { sessionList, selectedSessionIndex, setSelectedSessionIndex } = useSessionListService()
-  const [sessionSelect, setSessionSelect] = createState<Gtk.DropDown | null>(null)
-
-  selectedSessionIndex.subscribe(() => {
-    const selected = selectedSessionIndex.get()
-    const dropDown = sessionSelect.get()
-
-    if (dropDown && dropDown.selected !== selected) {
-      dropDown.selected = selected
-    }
-  })
 
   return (
     <Gtk.DropDown
@@ -30,9 +20,6 @@ export default function SessionSelect({ cssClasses }: SessionSelectProps) {
       selected={selectedSessionIndex}
       onNotifySelectedItem={(s) => {
         setSelectedSessionIndex(s.selected)
-      }}
-      onRealize={(dropDown) => {
-        setSessionSelect(dropDown)
       }}
     />
   )
