@@ -72,6 +72,7 @@ export default function UserCarousel() {
           hexpand={true}
           halign={Gtk.Align.FILL}
           scrollParams={new Adw.SpringParams(1, 0.5, 1000)}
+          allowLongSwipes={true}
           onRealize={(carousel) => {
             setUserListCarousel(carousel)
             scrollTo(selectedUserIndex.get(), false)
@@ -83,17 +84,11 @@ export default function UserCarousel() {
           <For each={userList}>
             {(user, index) => (
               <Gtk.Box
-                cssClasses={createComputed([selectedUserIndex, index], (n, i) => {
-                  const classList: string[] = ['UserCarouselSlide']
-                  if (n === i) {
-                    classList.push('UserCarouselSlideActive')
-                  }
-                  return classList
-                })}
+                cssClasses={createComputed([selectedUserIndex, index], (n, i) => ['UserCarouselSlide', ...(n === i ? ['UserCarouselSlideActive'] : [])])}
                 orientation={Gtk.Orientation.VERTICAL}
                 halign={Gtk.Align.CENTER}
                 vexpand={false}
-                cursor={userList.get().length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' })}
+                cursor={createComputed([userList], arr => arr.length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' }))}
                 widthRequest={220}
                 heightRequest={270}
                 opacity={createComputed([selectedUserIndex, index], (n, i) => n === i ? 1 : 0.5)}
@@ -124,7 +119,7 @@ export default function UserCarousel() {
           </For>
         </Adw.Carousel>
         <With value={userListCarousel}>
-          {value => value instanceof Adw.Carousel && <Adw.CarouselIndicatorDots carousel={value} visible={userList.get().length > 1} /> }
+          {value => value instanceof Adw.Carousel && <Adw.CarouselIndicatorDots carousel={value} visible={createComputed([userList], arr => arr.length > 1)} /> }
         </With>
       </Gtk.Box>
       <Gtk.Button
