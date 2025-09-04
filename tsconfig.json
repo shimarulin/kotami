@@ -10,6 +10,7 @@
     "jsxImportSource": "ags/gtk4",
     "paths": {
       "@apps/*": ["./ns/apps/*"],
+      "@components/*": ["./ns/components/*"],
       "@libs/*": ["./ns/libs/*"],
       "@services/*": ["./ns/services/*"],
       "@stores/*": ["./ns/stores/*"],
