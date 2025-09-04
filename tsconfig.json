@@ -12,6 +12,8 @@
       "@apps/*": ["./ns/apps/*"],
       "@libs/*": ["./ns/libs/*"],
       "@services/*": ["./ns/services/*"],
+      "@stores/*": ["./ns/stores/*"],
+      "@providers/*": ["./ns/providers/*"],
       "@utils/*": ["./ns/utils/*"],
       "@widgets/*": ["./ns/widgets/*"],
     }

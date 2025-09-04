@@ -1,5 +1,5 @@
 import { Accessor, createState } from 'ags'
-import { readPasswdToJson } from '@utils/readPasswdToJson'
+import { getAvailableUsers } from '@providers/users'
 import { createUserList } from './createUserList'
 import { useLoginStorageService } from '@services/LoginStorageService'
 import { UserListItem } from './types'
@@ -22,7 +22,7 @@ const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageR
 const useUserListService = () => {
   const { cachedLoginStorageRecord } = useLoginStorageService()
   if (userList.get().length === 0) {
-    setUserList(createUserList(readPasswdToJson()))
+    setUserList(createUserList(getAvailableUsers()))
   }
 
   // TODO: fill from active session

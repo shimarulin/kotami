@@ -1,4 +1,4 @@
-import { PasswdRecord } from '@utils/readPasswdToJson'
+import { PasswdRecord } from '@providers/users'
 import { createImagePainitable } from '@utils/createImagePainitable'
 import { UserListItem } from './types'
 

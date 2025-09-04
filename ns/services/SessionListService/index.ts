@@ -1,6 +1,6 @@
 import { Accessor, createState } from 'ags'
 import { useLoginStorageService } from '@services/LoginStorageService'
-import { type DesktopFileInfo } from '@utils/parseDesktopFiles.v3'
+import { type DesktopFileInfo } from '@providers/sessions'
 import { createSessionList } from './createSessionList'
 import { useUserListService } from '@services/UserListService'
 import { UserListItem } from '@services/UserListService/types'

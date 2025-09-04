@@ -1,7 +1,7 @@
-import { DesktopFileInfo, parseDesktopFiles } from '@utils/parseDesktopFiles.v3'
+import { DesktopFileInfo, getAvailableSessions } from '@providers/sessions'
 
 export const createSessionList = (): DesktopFileInfo[] => {
-  const sessionList = parseDesktopFiles()
+  const sessionList = getAvailableSessions()
   const nameCount = sessionList
     .reduce((acc, item) => {
       if (item.name) {

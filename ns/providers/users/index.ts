@@ -67,7 +67,7 @@ function parsePasswd(content: string): PasswdRecord[] {
     })
 }
 
-export function readPasswdToJson(): PasswdRecord[] {
+export function getAvailableUsers(): PasswdRecord[] {
   return parsePasswd(readFile('/etc/passwd'))
     .filter((u) => {
       return u.uid >= 1000 && u.username !== 'nobody'
