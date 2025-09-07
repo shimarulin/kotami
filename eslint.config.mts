@@ -17,8 +17,24 @@ export default defineConfig([
   js.configs.recommended,
   tseslint.configs.recommended,
   {
+    extends: [stylistic.configs.recommended],
+    rules: {
+      '@stylistic/array-bracket-newline': [
+        'error',
+        { multiline: true, minItems: 3 },
+      ],
+      '@stylistic/array-element-newline': [
+        'error',
+        { ArrayExpression: { consistent: true, multiline: true }, ArrayPattern: 'never' },
+      ],
+    },
+  },
+  {
     files: ['**/*.{ts,mts,tsx}'],
-    extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    extends: [
+      importPlugin.flatConfigs.recommended,
+      importPlugin.flatConfigs.typescript,
+    ],
     languageOptions: {
       parserOptions: {
         project,
@@ -32,7 +48,11 @@ export default defineConfig([
           project,
         },
       },
-      'import/external-module-folders': ['node_modules', 'node_modules/@types', '@girs'],
+      'import/external-module-folders': [
+        'node_modules',
+        'node_modules/@types',
+        '@girs',
+      ],
       'import/core-modules': [
         'gi://Adw',
         'gi://Gio',
@@ -41,36 +61,42 @@ export default defineConfig([
       ],
     },
     rules: {
-      'import/order': ['error', {
-        'newlines-between': 'always',
-        'alphabetize': {
-          order: 'asc',
-          caseInsensitive: true,
+      'import/order': [
+        'error',
+        {
+          'newlines-between': 'always',
+          'alphabetize': {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          'groups': [
+            'builtin',
+            'external',
+            'internal',
+            [
+              'parent',
+              'index',
+              'sibling',
+            ],
+            'object',
+          ],
+          'pathGroups': [
+            {
+              pattern: 'gi://*',
+              group: 'builtin',
+              position: 'after',
+            },
+            {
+              pattern: '@{apps,components,libs,services,stores,providers,utils,widgets}/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          'pathGroupsExcludedImportTypes': ['builtin'],
         },
-        'groups': [
-          'builtin',
-          'external',
-          'internal',
-          ['parent', 'index', 'sibling'],
-          'object',
-        ],
-        'pathGroups': [
-          {
-            pattern: 'gi://*',
-            group: 'builtin',
-            position: 'before',
-          },
-          {
-            pattern: '@{apps,components,libs,services,stores,providers,utils,widgets}/**',
-            group: 'internal',
-            position: 'after',
-          },
-        ],
-        'pathGroupsExcludedImportTypes': ['builtin'],
-      }],
+      ],
     },
   },
-  stylistic.configs.recommended,
   { files: ['**/*.md'], plugins: { markdown }, language: 'markdown/gfm', extends: ['markdown/recommended'] },
   { files: ['**/*.css'], plugins: { css }, language: 'css/css', extends: ['css/recommended'] },
 ])
