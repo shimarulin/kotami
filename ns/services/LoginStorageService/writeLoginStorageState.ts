@@ -1,10 +1,13 @@
 import Gio from 'gi://Gio'
+
 import { writeFile } from 'ags/file'
-import { useUserListService } from '@services/UserListService'
+
 import { useSessionListService } from '@services/SessionListService'
+import { useUserListService } from '@services/UserListService'
+
+import { useLoginStorageService } from '.'
 import { STATE_FILE } from './constants'
 import { type LoginStorageRecord } from './types'
-import { useLoginStorageService } from '.'
 
 export function writeLoginStorageState() {
   const { selectedUser } = useUserListService()

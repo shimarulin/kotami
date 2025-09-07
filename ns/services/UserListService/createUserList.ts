@@ -1,5 +1,6 @@
 import { PasswdRecord } from '@providers/users'
 import { createImagePainitable } from '@utils/createImagePainitable'
+
 import { UserListItem } from './types'
 
 const createUserListItem = (passwdRecord: PasswdRecord): UserListItem => {

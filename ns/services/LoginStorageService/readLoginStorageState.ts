@@ -1,6 +1,7 @@
 import { readFile } from 'ags/file'
-import { LoginStorageRecord } from './types'
+
 import { STATE_FILE } from './constants'
+import { LoginStorageRecord } from './types'
 
 export function readLoginStorageState(): LoginStorageRecord | null {
   const file = readFile(STATE_FILE)

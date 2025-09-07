@@ -1,11 +1,13 @@
 import { Accessor, createState } from 'ags'
-import { useLoginStorageService } from '@services/LoginStorageService'
+
+import { createDisposeManager } from '@libs/gnim-extensions'
 import { type DesktopFileInfo } from '@providers/sessions'
-import { createSessionList } from './createSessionList'
+import { useLoginStorageService } from '@services/LoginStorageService'
+import { LoginStorageRecord } from '@services/LoginStorageService/types'
 import { useUserListService } from '@services/UserListService'
 import { UserListItem } from '@services/UserListService/types'
-import { LoginStorageRecord } from '@services/LoginStorageService/types'
-import { createDisposeManager } from '@libs/gnim-extensions'
+
+import { createSessionList } from './createSessionList'
 
 const [sessionList, setSessionList] = createState<DesktopFileInfo[]>([])
 const [selectedSessionIndex, setSelectedSessionIndex] = createState<number>(-1)

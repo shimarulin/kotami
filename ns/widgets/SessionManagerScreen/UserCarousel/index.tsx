@@ -1,11 +1,14 @@
-import app from 'ags/gtk4/app'
 import Adw from 'gi://Adw'
 import Pango from 'gi://Pango'
+
 import { For, With, createState, onCleanup, createComputed } from 'ags'
 import { Gdk, Gtk } from 'ags/gtk4'
-import { useUserListService } from '@services/UserListService'
-import scss from './style.scss'
+import app from 'ags/gtk4/app'
+
 import { createDisposeManager } from '@libs/gnim-extensions'
+import { useUserListService } from '@services/UserListService'
+
+import scss from './style.scss'
 
 app.apply_css(scss)
 
@@ -84,14 +87,23 @@ export default function UserCarousel() {
           <For each={userList}>
             {(user, index) => (
               <Gtk.Box
-                cssClasses={createComputed([selectedUserIndex, index], (n, i) => ['UserCarouselSlide', ...(n === i ? ['UserCarouselSlideActive'] : [])])}
+                cssClasses={createComputed(
+                  [selectedUserIndex, index],
+                  (n, i) => ['UserCarouselSlide', ...(n === i ? ['UserCarouselSlideActive'] : [])],
+                )}
                 orientation={Gtk.Orientation.VERTICAL}
                 halign={Gtk.Align.CENTER}
                 vexpand={false}
-                cursor={createComputed([userList], arr => arr.length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' }))}
+                cursor={createComputed(
+                  [userList],
+                  arr => arr.length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' }),
+                )}
                 widthRequest={220}
                 heightRequest={270}
-                opacity={createComputed([selectedUserIndex, index], (n, i) => n === i ? 1 : 0.5)}
+                opacity={createComputed(
+                  [selectedUserIndex, index],
+                  (n, i) => n === i ? 1 : 0.5,
+                )}
               >
                 <Gtk.GestureClick
                   onReleased={() => {

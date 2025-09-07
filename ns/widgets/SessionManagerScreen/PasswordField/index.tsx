@@ -1,8 +1,8 @@
-import { Gtk } from 'ags/gtk4'
-// import { gettext as _ } from 'gettext'
-import { writeLoginStorageState } from '@services/LoginStorageService/writeLoginStorageState'
 import { Accessor } from 'ags'
+import { Gtk } from 'ags/gtk4'
+
 import { createComputedArray, toAccessor } from '@libs/gnim-extensions'
+import { writeLoginStorageState } from '@services/LoginStorageService/writeLoginStorageState'
 
 export interface PasswordFieldProps {
   cssClasses?: string[] | Accessor<string[]>

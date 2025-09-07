@@ -1,5 +1,6 @@
 import Gio from 'gi://Gio'
 import GLib from 'gi://GLib'
+
 import { getErrorMessage } from '@libs/log'
 
 export interface DesktopFileInfo {

@@ -1,9 +1,11 @@
 import { Accessor, createState } from 'ags'
+
 import { getAvailableUsers } from '@providers/users'
-import { createUserList } from './createUserList'
 import { useLoginStorageService } from '@services/LoginStorageService'
-import { UserListItem } from './types'
 import { LoginStorageRecord } from '@services/LoginStorageService/types'
+
+import { createUserList } from './createUserList'
+import { UserListItem } from './types'
 
 const [userList, setUserList] = createState<UserListItem[]>([])
 const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)

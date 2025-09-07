@@ -1,4 +1,5 @@
 import app from 'ags/gtk4/app'
+
 import SessionManagerScreen from '@widgets/SessionManagerScreen'
 
 app.start({

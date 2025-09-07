@@ -1,8 +1,10 @@
-import app from 'ags/gtk4/app'
 import { Astal, Gtk, Gdk } from 'ags/gtk4'
+import app from 'ags/gtk4/app'
+
 import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
-import SessionSelect from './SessionSelect'
+
 import PasswordField from './PasswordField'
+import SessionSelect from './SessionSelect'
 import scss from './style.scss'
 
 app.apply_css(scss)
