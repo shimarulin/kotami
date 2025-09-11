@@ -3,6 +3,7 @@ import app from 'ags/gtk4/app'
 
 import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
 
+import ErrorMessage from './ErrorMessage'
 import PasswordField from './PasswordField'
 import SessionSelect from './SessionSelect'
 import scss from './style.scss'
@@ -48,6 +49,7 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
           >
             <SessionSelect cssClasses={['SessionManagerField']} />
             <PasswordField cssClasses={['SessionManagerField']} />
+            <ErrorMessage cssClasses={['SessionManagerField']} />
           </Gtk.Box>
         </Gtk.Box>
       </Gtk.Box>

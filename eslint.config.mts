@@ -55,6 +55,7 @@ export default defineConfig([
       ],
       'import/core-modules': [
         'gi://Adw',
+        'gi://AstalIO',
         'gi://Gio',
         'gi://GLib',
         'gi://Pango',
