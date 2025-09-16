@@ -1,6 +1,8 @@
 import Gio from 'gi://Gio'
 import GLib from 'gi://GLib'
 
+import { toLog, getErrorMessage } from '@libs/log'
+
 // Промсифицируем метод read_bytes_async для InputStream
 Gio._promisify(Gio.InputStream.prototype, 'read_bytes_async', 'read_bytes_finish')
 
@@ -37,18 +39,60 @@ const _namespace = {
         }
       }
       catch (e) {
+        toLog(getErrorMessage(e))
+        throw e
         // Создание GLib.Error с правильными параметрами
-        throw new GLib.Error({
-          domain: GLib.LOG_DOMAIN,
-          code: 1, // Используем произвольный код ошибки
-          message: `Failed to parse command: ${e instanceof Error ? e.message : String(e)}`,
-        })
+        // throw new GLib.Error({
+        //   domain: GLib.LOG,
+        //   code: 1, // Используем произвольный код ошибки
+        //   message: `Failed to parse command: ${e instanceof Error ? e.message : String(e)}`,
+        // })
       }
 
       try {
-        await new CreateSession(username).send()
-        await new PostAuthMessage(password).send()
-        await new StartSession(argv, env).send()
+        const createSessionResponse = await new CreateSession(username).send()
+        // {"message_type":"SECRET","message":"Password: "}
+        // toLog('Session:')
+        // toLog(JSON.stringify(createSessionResponse))
+        // toLog(JSON.stringify(createSessionResponse instanceof AuthMessage))
+        // toLog(JSON.stringify(createSessionResponse instanceof AuthMessage && createSessionResponse.message_type === AuthMessageType.SECRET))
+        if (createSessionResponse instanceof AuthMessage && createSessionResponse.message_type === AuthMessageType.SECRET) {
+          const authMessageResponse = await new PostAuthMessage(password).send()
+          toLog('Auth:')
+          toLog(JSON.stringify(authMessageResponse))
+          toLog(JSON.stringify(authMessageResponse instanceof ErrorResponse))
+          // Auth:
+          // {"error_type":"AUTH_ERROR","description":"pam_authenticate: AUTH_ERR"}
+          if (authMessageResponse instanceof ErrorResponse) {
+            // throw new GLib.Error({
+            //   domain: GLib.LOG_DOMAIN,
+            //   code: 2, // Используем произвольный код ошибки
+            //   message: `${authMessageResponse.description}`,
+            // })
+
+            throw new Error(`${authMessageResponse.description}`)
+          }
+          else if (authMessageResponse instanceof AuthMessage) {
+            toLog('Auth Info:')
+            toLog(JSON.stringify(authMessageResponse))
+            throw new Error(`${authMessageResponse.message}`)
+          }
+        }
+        const startSessionResponse = await new StartSession(argv, env).send()
+        toLog('start:')
+        toLog(JSON.stringify(startSessionResponse))
+        toLog(JSON.stringify(createSessionResponse instanceof ErrorResponse))
+        //
+        // start:
+        // {"error_type":"ERROR","description":"session is not ready"}
+        if (startSessionResponse instanceof ErrorResponse) {
+          throw new Error(`${startSessionResponse.description}`)
+          // throw new GLib.Error({
+          //   domain: GLib.LOG_DOMAIN,
+          //   code: 2, // Используем произвольный код ошибки
+          //   message: `${startSessionResponse.description}`,
+          // })
+        }
       }
       catch (err) {
         await new CancelSession().send()
@@ -124,6 +168,8 @@ abstract class Request {
     }
 
     const response_str = new TextDecoder().decode(response_data)
+    toLog('response_str:')
+    toLog(response_str)
     const response_obj = JSON.parse(response_str)
 
     switch (response_obj.type) {
