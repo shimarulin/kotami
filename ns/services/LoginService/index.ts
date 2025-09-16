@@ -1,5 +1,10 @@
 import { createComputed, createState } from 'ags'
 
+import GreetdIPC from '@libs/greetd-ipc/cgreet-ipc.v3'
+import { useLogger } from '@services/LoggerService'
+import { useSessionListService } from '@services/SessionListService'
+import { useUserListService } from '@services/UserListService'
+
 import { createCountdownTimer } from './createCountdownTimer'
 import { createPulseTimer } from './createPulseTimer'
 
@@ -25,7 +30,8 @@ const resetRemainingAttempts = () => {
   setRemainingAttempts(MAX_LOGIN_ATTEMPTS)
   setIsLoginError(false)
 }
-const login = (password: string) => {
+const login = async (password: string) => {
+  const { logger } = useLogger()
   const currentAttempts = remainingAttempts.get()
   const beforeLogin = () => {
     setIsLoginError(false)
@@ -39,13 +45,21 @@ const login = (password: string) => {
 
   if (currentAttempts > 0) {
     beforeLogin()
+    const { selectedUser } = useUserListService()
+    const { selectedSession } = useSessionListService()
 
-    // try greet
-    print(password)
-    // and login failed event
-    setTimeout(() => {
-      onLoginFailed()
-    }, 2000)
+    const username = selectedUser.get().userName
+    const command = selectedSession.get().exec
+
+    if (username && command) {
+      try {
+        await GreetdIPC.AstalGreetTS.login(username, password, command)
+      }
+      catch (err) {
+        logger.error(err)
+        onLoginFailed()
+      }
+    }
   }
 }
 
