@@ -2,6 +2,7 @@ import Gio from 'gi://Gio'
 
 import { writeFile } from 'ags/file'
 
+import { useLogger } from '@services/LoggerService'
 import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
 
@@ -10,6 +11,7 @@ import { STATE_FILE } from './constants'
 import { type LoginStorageRecord } from './types'
 
 export function writeLoginStorageState() {
+  const { logger } = useLogger()
   const { selectedUser } = useUserListService()
   const { selectedSession, disposeSessionListService } = useSessionListService()
   const { cachedLoginStorageRecord } = useLoginStorageService()
@@ -28,16 +30,15 @@ export function writeLoginStorageState() {
     try {
       const parentDir = file.get_parent()
 
-      if (parentDir) {
-        if (!parentDir.query_exists(null)) {
-          parentDir.make_directory_with_parents(null)
-        }
+      if (parentDir && !parentDir.query_exists(null)) {
+        parentDir.make_directory_with_parents(null)
       }
+
+      const outputStream = file.create(Gio.FileCreateFlags.NONE, null)
+      outputStream.close(null)
     }
     catch (e) {
-      if (e instanceof Error) {
-        logError(e)
-      }
+      logger.error(e)
     }
   }
 
@@ -45,8 +46,6 @@ export function writeLoginStorageState() {
     writeFile(STATE_FILE, JSON.stringify(state))
   }
   catch (e) {
-    if (e instanceof Error) {
-      logError(e)
-    }
+    logger.error(e)
   }
 }

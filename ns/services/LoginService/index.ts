@@ -2,6 +2,7 @@ import { createComputed, createState } from 'ags'
 
 import { GreetdIPC } from '@libs/greetd-ipc'
 import { useLogger } from '@services/LoggerService'
+import { writeLoginStorageState } from '@services/LoginStorageService'
 import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
 
@@ -54,6 +55,7 @@ const login = async (password: string) => {
     if (username && command) {
       try {
         await GreetdIPC.login(username, password, command)
+        writeLoginStorageState()
       }
       catch (err) {
         logger.error(err)

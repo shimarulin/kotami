@@ -13,10 +13,10 @@ const useLoginStorageService = () => {
 
   return {
     cachedLoginStorageRecord,
-    writeLoginStorageState,
   }
 }
 
 export {
   useLoginStorageService,
+  writeLoginStorageState,
 }
