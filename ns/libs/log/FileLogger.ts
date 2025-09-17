@@ -3,31 +3,30 @@ import { getConsoleLogDomain } from 'console'
 import Gio from 'gi://Gio'
 import GLib from 'gi://GLib'
 
+import { getConfig } from '@providers/config'
+
 import { SYSTEMD_CAT_PRIORITY, SystemdCatPriority } from './constants'
 import { getErrorMessage } from './utils/getErrorMessage'
 import { getKeyByValue } from './utils/getKeyByValue'
 
-const DEFAULT_LOG_FILE_PATH = '/tmp/greetd_log'
+const { log_file_path } = getConfig()
 
 export class FileLogger {
   identifier: string
   file: Gio.File
 
-  constructor(log_file_path: string = DEFAULT_LOG_FILE_PATH) {
+  constructor() {
     this.identifier = getConsoleLogDomain()
     this.file = Gio.File.new_for_path(log_file_path)
 
     if (!this.file.query_exists(null)) {
       try {
-        // Получаем родительский каталог
         const parentDir = this.file.get_parent()
 
-        // Рекурсивно создаем родительские каталоги (если их нет)
         if (parentDir && !parentDir.query_exists(null)) {
           parentDir.make_directory_with_parents(null)
         }
 
-        // Создаем файл (пустой)
         const outputStream = this.file.create(Gio.FileCreateFlags.NONE, null)
         outputStream.close(null)
       }

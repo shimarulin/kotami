@@ -1,6 +1,6 @@
 import { createComputed, createState } from 'ags'
 
-import GreetdIPC from '@libs/greetd-ipc/cgreet-ipc.v3'
+import { GreetdIPC } from '@libs/greetd-ipc'
 import { useLogger } from '@services/LoggerService'
 import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
@@ -53,7 +53,7 @@ const login = async (password: string) => {
 
     if (username && command) {
       try {
-        await GreetdIPC.AstalGreetTS.login(username, password, command)
+        await GreetdIPC.login(username, password, command)
       }
       catch (err) {
         logger.error(err)

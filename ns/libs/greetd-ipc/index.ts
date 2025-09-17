@@ -1,0 +1,1 @@
+export { GreetdIPC } from './GreetdIPC'

@@ -1,92 +1,89 @@
+/**
+ * https://man.archlinux.org/man/greetd-ipc.7.en
+ */
+
 import Gio from 'gi://Gio'
 import GLib from 'gi://GLib'
 
 import { useLogger } from '@services/LoggerService'
 
-// Промсифицируем метод read_bytes_async для InputStream
 Gio._promisify(Gio.InputStream.prototype, 'read_bytes_async', 'read_bytes_finish')
 
-const _namespace = {
-  AstalGreetTS: {
-    /**
+export const GreetdIPC = {
+  /**
      * Shorthand for creating a session, posting the password,
      * and starting the session with the given `cmd`
      * which is parsed with [func@GLib.shell_parse_argv].
      */
-    async login(username: string, password: string, cmd: string): Promise<void> {
-      return this.login_with_env(username, password, cmd, [])
-    },
+  async login(username: string, password: string, cmd: string): Promise<void> {
+    return this.login_with_env(username, password, cmd, [])
+  },
 
-    /**
-     * Same as [func@AstalGreet.login] but allow for setting additional env
+  /**
+     * Same as [GreetdIPC.login] but allow for setting additional env
      * in the form of `name=value` pairs.
      */
-    async login_with_env(
-      username: string,
-      password: string,
-      cmd: string,
-      env: string[],
-    ): Promise<void> {
-      const { logger } = useLogger()
-      let argv: string[] = []
-      try {
-        // Правильный вызов GLib.shell_parse_argv
-        const [success, parsed_argv] = GLib.shell_parse_argv(cmd)
-        if (success && parsed_argv) {
-          argv = parsed_argv
-        }
-        else {
-          throw new Error('Failed to parse command')
-        }
+  async login_with_env(
+    username: string,
+    password: string,
+    cmd: string,
+    env: string[],
+  ): Promise<void> {
+    const { logger } = useLogger()
+    let argv: string[] = []
+    try {
+      const [success, parsed_argv] = GLib.shell_parse_argv(cmd)
+      if (success && parsed_argv) {
+        argv = parsed_argv
       }
-      catch (e) {
-        logger.error(e)
-        throw e
+      else {
+        throw new Error('Failed to parse command')
       }
+    }
+    catch (e) {
+      logger.error(e)
+      throw e
+    }
 
-      try {
-        const createSessionResponse = await new CreateSession(username).send()
-        logger.log(createSessionResponse)
-        if (createSessionResponse instanceof AuthMessage && createSessionResponse.message_type === AuthMessageType.SECRET) {
-          const authMessageResponse = await new PostAuthMessage(password).send()
-          logger.log(authMessageResponse)
+    try {
+      const createSessionResponse = await new CreateSession(username).send()
+      logger.log(createSessionResponse)
+      if (createSessionResponse instanceof AuthMessageResponse && createSessionResponse.auth_message_type === AuthMessageType.SECRET) {
+        const authMessageResponse = await new PostAuthMessage(password).send()
+        logger.log(authMessageResponse)
 
-          if (authMessageResponse instanceof ErrorResponse) {
-            logger.error(authMessageResponse)
-            throw new Error(`${authMessageResponse.description}`)
-          }
-          else if (authMessageResponse instanceof AuthMessage) {
-            logger.error(authMessageResponse)
-            throw new Error(`${authMessageResponse.message}`)
-          }
+        if (authMessageResponse instanceof ErrorResponse) {
+          throw new Error(`${authMessageResponse.description}`)
         }
-        const startSessionResponse = await new StartSession(argv, env).send()
-        logger.log(startSessionResponse)
-
-        if (startSessionResponse instanceof ErrorResponse) {
-          logger.error(startSessionResponse)
-          throw new Error(`${startSessionResponse.description}`)
+        else if (authMessageResponse instanceof AuthMessageResponse) {
+          throw new Error(`${authMessageResponse.auth_message}`)
         }
       }
-      catch (err) {
-        logger.error(err)
-        await new CancelSession().send()
-        throw err
+      const startSessionResponse = await new StartSession(argv, env).send()
+      logger.log(startSessionResponse)
+
+      if (startSessionResponse instanceof ErrorResponse) {
+        throw new Error(`${startSessionResponse.description}`)
       }
-    },
+    }
+    catch (err) {
+      logger.error(err)
+      await new CancelSession().send()
+      throw err
+    }
   },
 }
 
+/**
+ * Base classes
+ */
 abstract class Request {
   protected abstract get type_name(): string
 
   private serialize(): string {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = {}
-    // Копируем только собственные свойства, исключая унаследованные
+    const data: Record<string, string> = {}
     for (const [key, value] of Object.entries(this)) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (this.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(this, key)) {
         data[key] = value
       }
     }
@@ -146,9 +143,9 @@ abstract class Request {
     const response_obj = JSON.parse(response_str)
 
     switch (response_obj.type) {
-      case 'success': return new Success(response_obj)
+      case 'success': return new SuccessResponse()
       case 'error': return new ErrorResponse(response_obj)
-      case 'auth_message': return new AuthMessage(response_obj)
+      case 'auth_message': return new AuthMessageResponse(response_obj)
       default: throw new Gio.IOErrorEnum({
         code: Gio.IOErrorEnum.NOT_FOUND,
         message: 'unknown response type',
@@ -157,6 +154,11 @@ abstract class Request {
   }
 }
 
+abstract class Response {}
+
+/**
+ * Requests
+ */
 class CreateSession extends Request {
   protected get type_name(): string { return 'create_session' }
   username: string
@@ -193,34 +195,38 @@ class CancelSession extends Request {
   protected get type_name(): string { return 'cancel_session' }
 }
 
-abstract class Response {}
+/**
+ * Responses
+ */
+class SuccessResponse extends Response {
+  static readonly TYPE = 'success'
 
-class Success extends Response {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  constructor(obj: any) {
+  constructor() {
     super()
   }
 }
 
-// Переименовали класс, чтобы избежать конфликта с встроенным Error
+type ErrorResponseType = 'error' | 'auth_error'
+type ErrorResponseRecord = {
+  error_type: ErrorResponseType
+  description: string
+}
 class ErrorResponse extends Response {
   static readonly TYPE = 'error'
 
   error_type: ErrorType
   description: string
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(obj: any) {
+  constructor(record: ErrorResponseRecord) {
     super()
-    this.error_type = ErrorType.from_string(obj.error_type)
-    this.description = obj.description
+    this.error_type = ErrorType.from_string(record.error_type)
+    this.description = record.description
   }
 }
 
-// Заменили enum на класс со статическими методами
 class ErrorType {
-  static AUTH_ERROR = 'AUTH_ERROR'
-  static ERROR = 'ERROR'
+  static AUTH_ERROR = 'auth_error'
+  static ERROR = 'error'
 
   static from_string(str: string): string {
     switch (str) {
@@ -234,26 +240,30 @@ class ErrorType {
   }
 }
 
-class AuthMessage extends Response {
+type AuthMessageResponseType = 'visible' | 'secret' | 'info' | 'error'
+type AuthMessageResponseRecord = {
+  auth_message_type: AuthMessageResponseType
+  auth_message: string
+}
+
+class AuthMessageResponse extends Response {
   static readonly TYPE = 'auth_message'
 
-  message_type: AuthMessageType
-  message: string
+  auth_message_type: AuthMessageType
+  auth_message: string
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(obj: any) {
+  constructor(record: AuthMessageResponseRecord) {
     super()
-    this.message_type = AuthMessageType.from_string(obj.auth_message_type)
-    this.message = obj.auth_message
+    this.auth_message_type = AuthMessageType.from_string(record.auth_message_type)
+    this.auth_message = record.auth_message
   }
 }
 
-// Заменили enum на класс со статическими методами
 class AuthMessageType {
-  static VISIBLE = 'VISIBLE'
-  static SECRET = 'SECRET'
-  static INFO = 'INFO'
-  static ERROR = 'ERROR'
+  static VISIBLE = 'visible'
+  static SECRET = 'secret'
+  static INFO = 'info'
+  static ERROR = 'error'
 
   static from_string(str: string): string {
     switch (str) {
@@ -268,5 +278,3 @@ class AuthMessageType {
     }
   }
 }
-
-export default _namespace
