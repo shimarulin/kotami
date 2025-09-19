@@ -1,6 +1,7 @@
 import { createComputed, createState } from 'ags'
 
 import { GreetdIPC } from '@libs/greetd-ipc'
+import { usePamFaillockConf } from '@providers/pam-faillock'
 import { useLogger } from '@services/LoggerService'
 import { writeLoginStorageState } from '@services/LoginStorageService'
 import { useSessionListService } from '@services/SessionListService'
@@ -9,13 +10,13 @@ import { useUserListService } from '@services/UserListService'
 import { createCountdownTimer } from './createCountdownTimer'
 import { createPulseTimer } from './createPulseTimer'
 
-const MAX_LOGIN_ATTEMPTS = 3
-const LOCKED_TIMEOUT_IN_SEC = 30
+const pamConfig = usePamFaillockConf()
 
+// TODO: Сделать ограничения по каждому пользователю
 const [isLoggingIn, setIsLoggingIn] = createState<boolean>(false)
 const [isLogginError, setIsLoginError] = createState<boolean>(false)
-const [remainingAttempts, setRemainingAttempts] = createState<number>(MAX_LOGIN_ATTEMPTS)
-const [unlockInSeconds, setUnlockInSeconds] = createState<number>(LOCKED_TIMEOUT_IN_SEC)
+const [remainingAttempts, setRemainingAttempts] = createState<number>(pamConfig.deny)
+const [unlockInSeconds, setUnlockInSeconds] = createState<number>(pamConfig.unlock_time)
 const [fraction, setFraction] = createState<number>(0)
 const isLockedOut = createComputed([remainingAttempts], (attempts) => {
   return attempts === 0
@@ -28,7 +29,7 @@ const resetError = () => {
   setIsLoginError(false)
 }
 const resetRemainingAttempts = () => {
-  setRemainingAttempts(MAX_LOGIN_ATTEMPTS)
+  setRemainingAttempts(pamConfig.deny)
   setIsLoginError(false)
 }
 const login = async (password: string) => {
@@ -66,7 +67,7 @@ const login = async (password: string) => {
 }
 
 const useLoginService = () => {
-  const startCountdown = createCountdownTimer(LOCKED_TIMEOUT_IN_SEC, setUnlockInSeconds, setFraction, resetRemainingAttempts)
+  const startCountdown = createCountdownTimer(pamConfig.unlock_time, setUnlockInSeconds, setFraction, resetRemainingAttempts)
   const { startPulseTimer, stopPulseTimer } = createPulseTimer()
 
   return {
