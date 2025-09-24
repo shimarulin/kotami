@@ -1,4 +1,4 @@
-import { createComputed, createState } from 'ags'
+import { createComputed } from 'ags'
 
 import { GreetdIPC } from '@libs/greetd-ipc'
 import { usePamFaillockConf } from '@providers/pam-faillock'
@@ -8,16 +8,17 @@ import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
 
 import { createCountdownTimer } from './createCountdownTimer'
+import { createListOfComputedItems } from './createListOfComputedItems'
 import { createPulseTimer } from './createPulseTimer'
 
 const pamConfig = usePamFaillockConf()
 
-// TODO: Сделать ограничения по каждому пользователю
-const [isLoggingIn, setIsLoggingIn] = createState<boolean>(false)
-const [isLogginError, setIsLoginError] = createState<boolean>(false)
-const [remainingAttempts, setRemainingAttempts] = createState<number>(pamConfig.deny)
-const [unlockInSeconds, setUnlockInSeconds] = createState<number>(pamConfig.unlock_time)
-const [fraction, setFraction] = createState<number>(0)
+const { selectedUserIndex, userList } = useUserListService()
+const { accessor: isLoggingIn, set: setIsLoggingIn } = createListOfComputedItems<boolean>(userList, selectedUserIndex, false)
+const { accessor: isLogginError, set: setIsLoginError } = createListOfComputedItems<boolean>(userList, selectedUserIndex, false)
+const { accessor: remainingAttempts, set: setRemainingAttempts } = createListOfComputedItems<number>(userList, selectedUserIndex, pamConfig.deny)
+const { accessor: unlockInSeconds, set: setUnlockInSeconds } = createListOfComputedItems<number>(userList, selectedUserIndex, pamConfig.unlock_time)
+const { accessor: fraction, set: setFraction } = createListOfComputedItems<number>(userList, selectedUserIndex, 0)
 const isLockedOut = createComputed([remainingAttempts], (attempts) => {
   return attempts === 0
 })
@@ -25,28 +26,29 @@ const isWaiting = createComputed([isLoggingIn, isLockedOut], (isLoggingInValue, 
   return isLoggingInValue || isLockedOutValue
 })
 
-const resetError = () => {
-  setIsLoginError(false)
+const resetError = (index?: number) => {
+  setIsLoginError(false, index)
 }
-const resetRemainingAttempts = () => {
-  setRemainingAttempts(pamConfig.deny)
-  setIsLoginError(false)
+const resetRemainingAttempts = (index?: number) => {
+  setRemainingAttempts(pamConfig.deny, index)
+  resetError(index)
+}
+const beforeLogin = (index: number) => {
+  setIsLoginError(false, index)
+  setIsLoggingIn(true, index)
+}
+const onLoginFailed = (index: number, attempts: number) => {
+  setIsLoginError(true, index)
+  setIsLoggingIn(false, index)
+  setRemainingAttempts(attempts, index)
 }
 const login = async (password: string) => {
   const { logger } = useLogger()
+  const userIndex = selectedUserIndex.get()
   const currentAttempts = remainingAttempts.get()
-  const beforeLogin = () => {
-    setIsLoginError(false)
-    setIsLoggingIn(true)
-  }
-  const onLoginFailed = () => {
-    setIsLoginError(true)
-    setIsLoggingIn(false)
-    setRemainingAttempts(currentAttempts - 1)
-  }
 
   if (currentAttempts > 0) {
-    beforeLogin()
+    beforeLogin(userIndex)
     const { selectedUser } = useUserListService()
     const { selectedSession } = useSessionListService()
 
@@ -56,11 +58,12 @@ const login = async (password: string) => {
     if (username && command) {
       try {
         await GreetdIPC.login(username, password, command)
+        resetRemainingAttempts(userIndex)
         writeLoginStorageState()
       }
       catch (err) {
+        onLoginFailed(userIndex, currentAttempts - 1)
         logger.error(err)
-        onLoginFailed()
       }
     }
   }
