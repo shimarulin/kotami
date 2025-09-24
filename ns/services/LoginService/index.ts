@@ -7,9 +7,7 @@ import { writeLoginStorageState } from '@services/LoginStorageService'
 import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
 
-import { createCountdownTimer } from './createCountdownTimer'
 import { createListOfComputedItems } from './createListOfComputedItems'
-import { createPulseTimer } from './createPulseTimer'
 
 const pamConfig = usePamFaillockConf()
 
@@ -70,9 +68,6 @@ const login = async (password: string) => {
 }
 
 const useLoginService = () => {
-  const startCountdown = createCountdownTimer(pamConfig.unlock_time, setUnlockInSeconds, setFraction, resetRemainingAttempts)
-  const { startPulseTimer, stopPulseTimer } = createPulseTimer()
-
   return {
     isLockedOut,
     isLoggingIn,
@@ -82,9 +77,9 @@ const useLoginService = () => {
     unlockInSeconds,
     remainingAttempts,
     login,
-    startCountdown,
-    startPulseTimer,
-    stopPulseTimer,
+    setUnlockInSeconds,
+    setFraction,
+    resetRemainingAttempts,
     resetError,
   }
 }

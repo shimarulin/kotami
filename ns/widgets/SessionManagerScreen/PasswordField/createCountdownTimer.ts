@@ -34,6 +34,7 @@ export function createCountdownTimer(
   function start(progressBar: Gtk.ProgressBar) {
     const { selectedUserIndex } = useUserListService()
     const userIndex = selectedUserIndex.get()
+    // TODO: Get start time from PAM faillock per user
     const startTimeInSeconds = GLib.get_monotonic_time() / 1000000
     progressBar.set_inverted(true)
     const onTick = createTicker(userIndex, startTimeInSeconds)
