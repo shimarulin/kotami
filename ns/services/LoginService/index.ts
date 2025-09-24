@@ -1,13 +1,12 @@
 import { createComputed } from 'ags'
 
+import { createComputedMap } from '@libs/gnim-extensions'
 import { GreetdIPC } from '@libs/greetd-ipc'
 import { usePamFaillockConf } from '@providers/pam-faillock'
 import { useLogger } from '@services/LoggerService'
 import { writeLoginStorageState } from '@services/LoginStorageService'
 import { useSessionListService } from '@services/SessionListService'
 import { useUserListService } from '@services/UserListService'
-
-import { createComputedMap } from './createComputedMap'
 
 const pamConfig = usePamFaillockConf()
 
