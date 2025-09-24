@@ -1,4 +1,4 @@
-import { Accessor, createState } from 'ags'
+import { Accessor, createComputed, createState } from 'ags'
 
 import { getAvailableUsers } from '@providers/users'
 import { useLoginStorageService } from '@services/LoginStorageService'
@@ -11,6 +11,9 @@ const [userList, setUserList] = createState<UserListItem[]>([])
 const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)
 
 const selectedUser = selectedUserIndex(index => userList.get()[index])
+const selectedUserName = createComputed([selectedUser], (user) => {
+  return user.userName
+})
 
 const setSelectedUserIndexByUserName = (userName: string) => {
   const index = userList.get().findIndex(user => user.userName === userName)
@@ -45,6 +48,7 @@ const useUserListService = () => {
     userList,
     selectedUser,
     selectedUserIndex,
+    selectedUserName,
     setSelectedUserIndex,
   }
 }
