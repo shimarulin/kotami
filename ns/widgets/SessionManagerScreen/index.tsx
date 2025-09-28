@@ -1,29 +1,40 @@
+import { createComputed } from 'ags'
 import { Astal, Gtk, Gdk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
+import { timeout } from 'ags/time'
 
-import UserCarousel from '@widgets/SessionManagerScreen/UserCarousel'
+import { useSessionManagerScreenService } from '@services/SessionManagerScreenService'
 
 import ErrorMessage from './ErrorMessage'
 import PasswordField from './PasswordField'
 import SessionSelect from './SessionSelect'
 import scss from './style.scss'
+import UserCarousel from './UserCarousel'
 
 app.apply_css(scss)
 
 export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor
+  const { windowVisible, setWindowVisible } = useSessionManagerScreenService()
+  const windowCssClasses = createComputed([windowVisible], (windowVisibleValue) => {
+    return windowVisibleValue ? ['SessionManagerScreen', 'SessionManagerScreenVisible'] : ['SessionManagerScreen']
+  })
 
   return (
     <Astal.Window
       visible
       name="SessionManagerScreen"
-      class="SessionManagerScreen"
+      cssClasses={windowCssClasses}
       gdkmonitor={gdkmonitor}
-      // exclusivity={Astal.Exclusivity.IGNORE}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT | BOTTOM}
       keymode={Astal.Keymode.ON_DEMAND}
       application={app}
+      $={() => {
+        timeout(250, () => {
+          setWindowVisible(true)
+        })
+      }}
     >
       <Gtk.Box
         cssClasses={['SessionManagerContainer']}

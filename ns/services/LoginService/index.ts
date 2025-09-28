@@ -1,4 +1,6 @@
 import { createComputed } from 'ags'
+import app from 'ags/gtk4/app'
+import { timeout } from 'ags/time'
 
 import { createComputedMap } from '@libs/gnim-extensions'
 import { GreetdIPC } from '@libs/greetd-ipc'
@@ -6,11 +8,13 @@ import { usePamFaillockConf } from '@providers/pam-faillock'
 import { useLogger } from '@services/LoggerService'
 import { writeLoginStorageState } from '@services/LoginStorageService'
 import { useSessionListService } from '@services/SessionListService'
+import { useSessionManagerScreenService } from '@services/SessionManagerScreenService'
 import { useUserListService } from '@services/UserListService'
 
 const pamConfig = usePamFaillockConf()
 
 const { userList, selectedUserName } = useUserListService()
+const { setWindowVisible } = useSessionManagerScreenService()
 const keys = createComputed([userList], (users) => {
   return users.map(user => user.userName)
 })
@@ -60,6 +64,12 @@ const login = async (password: string) => {
         await GreetdIPC.login(username, password, command)
         resetRemainingAttempts(selectedUserNameValue)
         writeLoginStorageState()
+        timeout(250, () => {
+          setWindowVisible(false)
+          timeout(250, () => {
+            app.quit(0)
+          })
+        })
       }
       catch (err) {
         onLoginFailed(selectedUserNameValue, currentAttempts - 1)
