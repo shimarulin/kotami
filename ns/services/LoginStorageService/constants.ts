@@ -1,1 +1,1 @@
-export const STATE_FILE = '/var/lib/kotami/state'
+export const STATE_FILE = '/var/lib/kotami-greeter/state'
