@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Основной каталог с приложениями
 apps_dir="./ns/apps"
@@ -20,17 +20,30 @@ find "$apps_dir" -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d
     # Получение имени подкаталога без пути
     subdir=$(basename "$dir")
 
-    # Формирование путей для входного и выходного файлов
-    input_file="./ns/apps/$subdir/app.ts"
+    # Формирование путей для входных файлов
+    input_dir="./ns/apps/$subdir"
+    input_file_ts="$input_dir/app.ts"
+    input_file_tsx="$input_dir/app.tsx"
     output_path="./output/$subdir"
 
-    # Проверка существования исходного файла
-    if [ ! -f "$input_file" ]; then
-        echo "Предупреждение: Файл $input_file не существует, пропускаем $subdir" >&2
+    # Определение, какой файл использовать
+    if [ -f "$input_file_ts" ]; then
+        input_file="$input_file_ts"
+    elif [ -f "$input_file_tsx" ]; then
+        input_file="$input_file_tsx"
+    else
+        echo "Предупреждение: Не найден app.ts или app.tsx в $input_dir, пропускаем $subdir" >&2
         continue
     fi
 
     # Выполнение команды bundle
-    echo "Обработка: $subdir"
+    echo "Обработка: $subdir (файл: $(basename "$input_file"))"
     ags bundle "$input_file" "$output_path"
+
+    # Проверка успешности выполнения команды
+    if [ $? -eq 0 ]; then
+        echo "Успешно: $subdir"
+    else
+        echo "Ошибка: Не удалось обработать $subdir" >&2
+    fi
 done
