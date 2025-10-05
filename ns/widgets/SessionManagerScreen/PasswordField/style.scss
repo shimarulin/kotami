@@ -1,0 +1,31 @@
+@keyframes shake-horizontal-light {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-5px); }
+  20% { transform: translateX(5px); }
+  30% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  50% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+  70% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+  90% { transform: translateX(-3px);}
+  100% { transform: translateX(0); }
+}
+
+.UserPasswordEntry {
+  &.error {
+    animation: shake-horizontal-light 600ms ease-out 0s 1 normal none;
+  }
+}
+
+.PasswordFieldProgress {
+  trough {
+    border-radius: 0;
+    min-height: 2px;
+    background-color: transparent;
+  }
+
+  progress {
+    border-radius: 0;
+  }
+}

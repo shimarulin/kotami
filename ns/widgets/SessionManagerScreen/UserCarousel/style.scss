@@ -1,0 +1,40 @@
+@use '../../../styles/_variables.scss' as var;
+
+.UserCarouselButton {
+  background-color: transparent;
+  border-radius: 0px;
+  padding-top: 62px;
+  padding-bottom: 180px;
+
+  & image {
+    padding: 16px;
+    border-radius: 9999px;
+    background-color: var.$btn-background-color;
+    transition: var.$hover-transition;
+  }
+
+  &:hover image {
+    background-color: var.$btn-hover-background-color;
+  }
+}
+
+.UserCarousel {
+  .UserCarouselSlide avatar {
+    transition: all 100ms ease-in-out;
+    transform: scale(0.85);
+  }
+
+  .UserCarouselSlideActive avatar {
+    transform: scale(1);
+  }
+
+  .UserCarouselCaptionContainer {
+    padding-top: 8px;
+    padding-bottom: 12px;
+
+    .UserCarouselCaption {
+      font-size: 1.75em;
+      line-height: 1.25;
+    }
+  }
+}

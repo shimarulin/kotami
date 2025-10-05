@@ -1,0 +1,25 @@
+.SessionManagerScreen {
+  opacity: 0.0;
+  transition: opacity 250ms ease-in-out;
+
+  &.SessionManagerScreenVisible {
+    opacity: 1.0;
+  }
+
+  .SessionManagerContainer {
+    .SessionManagerView {
+      .SessionManagerFields {
+        margin-top: 2em;
+        margin-bottom: 2em;
+
+        .SessionManagerField {
+          margin-top: 1em;
+        }
+
+        .UserPasswordEntry {
+          font-family: var(--monospace-font-family);
+        }
+      }
+    }
+  }
+}
