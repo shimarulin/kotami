@@ -2,7 +2,7 @@ import { onCleanup } from 'ags'
 import { Astal, Gdk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
 
-export default function Panel({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
+export default function StatusBar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
   let win: Astal.Window
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
 
