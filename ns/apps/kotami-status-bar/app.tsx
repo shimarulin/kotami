@@ -1,7 +1,7 @@
 import { createBinding, For, This } from 'ags'
 import app from 'ags/gtk4/app'
 
-import StatusBar from './components/StatusBar'
+import StatusBarWindow from './components/StatusBarWindow'
 // import style from './style.scss'
 
 app.start({
@@ -18,7 +18,7 @@ app.start({
       <For each={monitors}>
         {monitor => (
           <This this={app}>
-            <StatusBar gdkmonitor={monitor} />
+            <StatusBarWindow gdkmonitor={monitor} />
           </This>
         )}
       </For>
