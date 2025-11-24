@@ -56,9 +56,11 @@ export default defineConfig([
       'import/core-modules': [
         'gi://Adw',
         'gi://AstalIO',
+        'gi://AstalApps',
         'gi://Gio',
         'gi://GLib',
         'gi://Pango',
+        'gi://Graphene',
       ],
     },
     rules: {

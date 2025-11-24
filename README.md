@@ -3,10 +3,22 @@
 > Yet Another Shell
 
 Dependencies:
-- "niri"
-- "aylurs-gtk-shell-git"
-- "libastal-greetd-git"
-- "libadwaita"
+- niri
+- libadwaita
+- aylurs-gtk-shell-git
+- libastal-apps-git
+- ? libastal-auth-git
+- libastal-battery-git
+- libastal-bluetooth-git
+- ? libastal-gjs-git
+- libastal-io-git
+- libastal-mpris-git
+- libastal-network-git
+- libastal-notifd-git
+- libastal-powerprofiles-git
+- libastal-tray-git
+- libastal-wireplumber-git
+- libastal-niri-git
 
 ## Development
 

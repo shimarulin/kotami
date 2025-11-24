@@ -25,6 +25,7 @@ export default function StatusBarWindow({ gdkmonitor }: { gdkmonitor: Gdk.Monito
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT}
       application={app}
+      layer={Astal.Layer.TOP}
     >
       <StatusBar />
     </window>
