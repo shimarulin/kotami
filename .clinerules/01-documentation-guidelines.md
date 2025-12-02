@@ -18,3 +18,6 @@ The keywords "MUST", "MUST NOT", "REQUIRED", "RECOMMENDED", and "OPTIONAL" in pr
 - Correct: "The configuration file MUST be in JSON format."
 - Incorrect (normal English): "You must update the dependencies." (use "should" or rephrase if not absolute requirement)
 - Optional: "The UI MAY include dark mode support."
+
+## Language Requirements
+All project documentation (README, comments, API documentation, etc.) MUST be written in English.
