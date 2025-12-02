@@ -15,16 +15,18 @@ app.apply_css(scss)
 
 export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor
-  const { windowVisible, setWindowVisible } = useSessionManagerScreenService()
-  const windowCssClasses = createComputed([windowVisible], (windowVisibleValue) => {
-    return windowVisibleValue ? ['SessionManagerScreen', 'SessionManagerScreenVisible'] : ['SessionManagerScreen']
-  })
+  const service = useSessionManagerScreenService()
+
+  // Compute CSS classes based on service state
+  const getWindowCssClasses = () => {
+    return service.windowVisible ? ['SessionManagerScreen', 'SessionManagerScreenVisible'] : ['SessionManagerScreen']
+  }
 
   return (
     <Astal.Window
       visible
       name="SessionManagerScreen"
-      cssClasses={windowCssClasses}
+      cssClasses={getWindowCssClasses()}
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT | BOTTOM}
@@ -32,7 +34,7 @@ export default function SessionManagerScreen(gdkmonitor: Gdk.Monitor) {
       application={app}
       $={() => {
         timeout(250, () => {
-          setWindowVisible(true)
+          service.showWindow()
         })
       }}
     >

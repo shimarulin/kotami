@@ -2,30 +2,30 @@
 
 ## Architecture Overview
 
-Kotami follows a modular, component-based architecture designed for extensibility and maintainability. The system is organized into distinct layers with clear separation of concerns.
+Kotami follows a modern GObject-based architecture designed for type safety, reactivity, and native GTK integration. The system implements GObject services with decorators, reactive properties, and signal-based communication patterns.
 
 ## Core Architectural Patterns
 
-### Layered Architecture
+### GObject Layered Architecture
 ```
-Apps (Entry Points)
+Applications (AppBase + Context)
     ↓
-Widgets (UI Components)
+Widgets (UI Components + Reactive Bindings)
     ↓
-Services (Business Logic)
+GObject Services (@register, @property, @signal)
     ↓
-Providers (Data Access)
+Providers (Data Access + Abstractions)
     ↓
-Libraries (Core Utilities)
+Libraries (Core Utilities + GTK Integration)
 ```
 
 ### Component Organization
-- **Apps**: Entry points and application-specific logic
-- **Widgets**: Reusable UI components with complex interactions
-- **Components**: Basic UI building blocks
-- **Services**: Business logic and state management
-- **Providers**: Data access and external integrations
-- **Libraries**: Shared utilities and core functionality
+- **Applications**: Entry points extending AppBase with context providers
+- **Widgets**: Complex UI components with GObject service integration
+- **Components**: Base UI primitives (BaseWindow, BaseButton) with reactive styling
+- **Services**: GObject classes with reactive properties and signal emissions
+- **Providers**: Data access abstractions with async operations
+- **Libraries**: Core utilities with GTK/GObject integration
 
 ## Key Design Decisions
 
@@ -45,6 +45,53 @@ Libraries (Core Utilities)
 - Environment-specific settings support
 
 ## Design Patterns
+
+### GObject Service Pattern
+```typescript
+@register()
+export class AuthService extends GObject.Object {
+  @property(Boolean) isAuthenticated = false
+  @property(String) currentUsername = ""
+
+  @signal()
+  authenticationSuccess(user: User): void {}
+
+  // Methods with business logic
+  async authenticate(username: string, password: string) {
+    // Implementation
+    this.authenticationSuccess(user)
+  }
+}
+```
+GObject services provide reactive state management, signal-based communication, and automatic lifecycle management.
+
+### Reactive Property Pattern
+```typescript
+// GObject reactive properties
+@property(Boolean) isLoading = false
+@property(String) errorMessage = ""
+
+// Reactive bindings in components
+const loading = service.bind("is-loading")
+const error = service.bind("error-message")
+```
+Properties automatically emit change signals and support reactive bindings.
+
+### Context Provider Pattern
+```typescript
+// Application-specific contexts
+export const GreeterContext = createContext<GreeterServices>()
+
+// Provider components
+export function GreeterProvider({ children }) {
+  return (
+    <GreeterContext.Provider value={services}>
+      {children}
+    </GreeterContext.Provider>
+  )
+}
+```
+Contexts provide type-safe service injection for application components.
 
 ### Service Locator Pattern
 Services are registered and accessed through a centralized service locator, enabling loose coupling between components.
@@ -73,6 +120,70 @@ Session Discovery → Session Selection → Environment Setup → Process Launch
 ### UI Composition
 ```
 App Entry → Widget Assembly → Component Integration → Service Binding
+```
+
+## GObject Implementation Patterns
+
+### Decorator Usage
+```typescript
+@register()  // Registers class with GObject type system
+class MyService extends GObject.Object {
+
+  @property(Boolean)  // Creates reactive boolean property
+  isActive = false
+
+  @property(String)   // Creates reactive string property
+  status = "idle"
+
+  @signal()           // Defines signal that can be emitted
+  stateChanged(newState: string): void {}
+}
+```
+
+### Lifecycle Management with onCleanup
+```typescript
+import { onCleanup } from "gnim"
+
+function MyWidget() {
+  // GObject signal connections
+  const signalId = service.connect("state-changed", callback)
+  onCleanup(() => service.disconnect(signalId))
+
+  // Timers and intervals
+  const interval = setInterval(update, 1000)
+  onCleanup(() => clearInterval(interval))
+
+  // Custom cleanup
+  onCleanup(() => {
+    // Cleanup logic
+  })
+}
+```
+
+### Reactive Bindings
+```typescript
+// Service property binding
+const isLoading = service.bind("is-loading")
+const errorMessage = service.bind("error-message")
+
+// In JSX
+return (
+  <box>
+    <spinner visible={isLoading} />
+    <label label={errorMessage} />
+  </box>
+)
+```
+
+### Signal Handling
+```typescript
+// Connecting to signals
+service.connect("authentication-success", (service, user) => {
+  console.log("User authenticated:", user.name)
+})
+
+// Emitting signals
+this.authenticationSuccess(user)
 ```
 
 ## Critical Implementation Paths
