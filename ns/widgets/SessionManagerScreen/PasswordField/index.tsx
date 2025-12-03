@@ -5,7 +5,7 @@ import { Gtk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
 
 import { createComputedArray, createDisposeManager, toAccessor } from '../../../libs/gnim-extensions'
-import { useAuthService } from '../../../services'
+import { useAuthService, useUserService } from '../../../services'
 
 import scss from './style.scss'
 
@@ -17,6 +17,7 @@ export interface PasswordFieldProps {
 
 export default function PasswordField({ cssClasses }: PasswordFieldProps) {
   const authService = useAuthService()
+  const userService = useUserService()
   const [disposes, dispose] = createDisposeManager()
 
   // Reactive error state
@@ -27,13 +28,6 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
     const hasErrorValue = hasError()
     return hasErrorValue ? ['error'] : []
   })
-
-  // Get selected user for authentication
-  const getSelectedUser = () => {
-    // TODO: Integrate with UserService to get selected user
-    // For now, use a mock user
-    return { name: 'user' }
-  }
 
   return (
     <Gtk.Overlay>
@@ -69,7 +63,7 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
         showPeekIcon={true}
         canFocus={true}
         onActivate={({ text }) => {
-          const user = getSelectedUser()
+          const user = userService.currentUser
           if (user) {
             authService.authenticate(user.name, text)
           }
