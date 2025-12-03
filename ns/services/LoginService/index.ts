@@ -2,31 +2,43 @@ import { createComputed } from 'ags'
 import app from 'ags/gtk4/app'
 import { timeout } from 'ags/time'
 
-import { createComputedMap } from '@libs/gnim-extensions'
-import { GreetdIPC } from '@libs/greetd-ipc'
-import { usePamFaillockConf } from '@providers/pam-faillock'
-import { useLogger } from '@services/LoggerService'
-import { writeLoginStorageState } from '@services/LoginStorageService'
-import { useSessionListService } from '@services/SessionListService'
-import { useSessionManagerScreenService } from '@services/SessionManagerScreenService'
-import { useUserListService } from '@services/UserListService'
+import { createComputedMap } from '../../libs/gnim-extensions'
+import { GreetdIPC } from '../../libs/greetd-ipc'
+import { usePamFaillockConf } from '../../providers/pam-faillock'
+import { useLogger } from '../../services/LoggerService'
+import { writeLoginStorageState } from '../../services/LoginStorageService'
+import { useSessionService } from '../../services'
+import { useSessionManagerScreenService } from '../../services/SessionManagerScreenService'
+import { useUserService } from '../../services'
 
 const pamConfig = usePamFaillockConf()
 
-const { userList, selectedUserName } = useUserListService()
-const { setWindowVisible } = useSessionManagerScreenService()
-const keys = createComputed([userList], (users) => {
-  return users.map(user => user.userName)
+const userService = useUserService()
+const sessionService = useSessionService()
+
+// Create computed values for compatibility with old API
+const userList = createComputed(() => userService.availableUsers.map((u: any) => ({
+  userName: u.name,
+  realName: u.realName || u.name
+})))
+const selectedUserName = createComputed(() => userService.currentUser?.name || '')
+const sessionManagerService = useSessionManagerScreenService()
+const keys = createComputed(() => {
+  const users = userList()
+  return users.map((user: any) => user.userName)
 })
 const { accessor: isLoggingIn, set: setIsLoggingIn } = createComputedMap<boolean>(keys, selectedUserName, false)
 const { accessor: isLogginError, set: setIsLoginError } = createComputedMap<boolean>(keys, selectedUserName, false)
 const { accessor: remainingAttempts, set: setRemainingAttempts } = createComputedMap<number>(keys, selectedUserName, pamConfig.deny)
 const { accessor: unlockInSeconds, set: setUnlockInSeconds } = createComputedMap<number>(keys, selectedUserName, pamConfig.unlock_time)
 const { accessor: fraction, set: setFraction } = createComputedMap<number>(keys, selectedUserName, 0)
-const isLockedOut = createComputed([remainingAttempts], (attempts) => {
+const isLockedOut = createComputed(() => {
+  const attempts = remainingAttempts()
   return attempts === 0
 })
-const isWaiting = createComputed([isLoggingIn, isLockedOut], (isLoggingInValue, isLockedOutValue) => {
+const isWaiting = createComputed(() => {
+  const isLoggingInValue = isLoggingIn()
+  const isLockedOutValue = isLockedOut()
   return isLoggingInValue || isLockedOutValue
 })
 
@@ -53,11 +65,9 @@ const login = async (password: string) => {
 
   if (currentAttempts > 0) {
     beforeLogin(selectedUserNameValue)
-    const { selectedUser } = useUserListService()
-    const { selectedSession } = useSessionListService()
 
-    const username = selectedUser.get().userName
-    const command = selectedSession.get().exec
+    const username = userService.currentUser?.name
+    const command = sessionService.selectedSession?.exec
 
     if (username && command) {
       try {
@@ -65,7 +75,7 @@ const login = async (password: string) => {
         resetRemainingAttempts(selectedUserNameValue)
         writeLoginStorageState()
         timeout(250, () => {
-          setWindowVisible(false)
+          sessionManagerService.hideWindow()
           timeout(250, () => {
             app.quit(0)
           })

@@ -3,8 +3,7 @@ import Gio from 'gi://Gio'
 import { writeFile } from 'ags/file'
 
 import { useLogger } from '@services/LoggerService'
-import { useSessionListService } from '@services/SessionListService'
-import { useUserListService } from '@services/UserListService'
+import { useSessionService, useUserService } from '@services/index'
 
 import { useLoginStorageService } from '.'
 import { STATE_FILE } from './constants'
@@ -12,18 +11,22 @@ import { type LoginStorageRecord } from './types'
 
 export function writeLoginStorageState() {
   const { logger } = useLogger()
-  const { selectedUser } = useUserListService()
-  const { selectedSession, disposeSessionListService } = useSessionListService()
+  const userService = useUserService()
+  const sessionService = useSessionService()
   const { cachedLoginStorageRecord } = useLoginStorageService()
-  const state: LoginStorageRecord = {
-    user: selectedUser.get().userName,
-    sessions: {
-      ...(cachedLoginStorageRecord.get()?.sessions),
-      [selectedUser.get().userName]: selectedSession.get().path,
-    },
+
+  if (!userService.currentUser || !sessionService.selectedSession) {
+    logger.warn('No user or session selected for login storage')
+    return
   }
 
-  disposeSessionListService()
+  const state: LoginStorageRecord = {
+    user: userService.currentUser.name,
+    sessions: {
+      ...(cachedLoginStorageRecord.get()?.sessions),
+      [userService.currentUser.name]: sessionService.selectedSession.exec, // Use exec as session identifier
+    },
+  }
 
   const file = Gio.File.new_for_path(STATE_FILE)
   if (!file.query_exists(null)) {

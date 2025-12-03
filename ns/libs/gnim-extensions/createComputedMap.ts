@@ -9,7 +9,9 @@ function createObjectFromKeyList<T, K extends string>(keys: K[], value: T): Reco
 
 export const createComputedMap = <T>(keyListAccessor: Accessor<string[]>, keyAccessor: Accessor<string>, initValue: T) => {
   const [stateMap, setStateMap] = createState<Record<string, T>>(createObjectFromKeyList(keyListAccessor.get(), initValue))
-  const accessor = createComputed([keyAccessor, stateMap], (keyValue, stateMapValues) => {
+  const accessor = createComputed(() => {
+    const keyValue = keyAccessor()
+    const stateMapValues = stateMap()
     return stateMapValues[keyValue]
   })
   const set = (value: T, key?: string) => {

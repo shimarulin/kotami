@@ -5,9 +5,9 @@ import { For, With, createState, onCleanup, createComputed } from 'ags'
 import { Gdk, Gtk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
 
-import { createDisposeManager } from '../../../libs/gnim-extensions'
+import { createDisposeManager } from '@libs/gnim-extensions'
 import { useUserService } from '../../../services'
-import { User } from '../../../services/AuthService'
+import { User } from '@services/AuthService'
 
 import scss from './style.scss'
 

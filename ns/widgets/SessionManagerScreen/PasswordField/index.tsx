@@ -23,7 +23,8 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
   const hasError = createComputed(() => authService.errorMessage.length > 0)
   const isAuthenticating = createComputed(() => authService.isAuthenticating)
 
-  const messageCssClasses = createComputed([hasError], (hasErrorValue) => {
+  const messageCssClasses = createComputed(() => {
+    const hasErrorValue = hasError()
     return hasErrorValue ? ['error'] : []
   })
 

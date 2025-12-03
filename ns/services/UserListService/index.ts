@@ -11,7 +11,8 @@ const [userList, setUserList] = createState<UserListItem[]>([])
 const [selectedUserIndex, setSelectedUserIndex] = createState<number>(-1)
 
 const selectedUser = selectedUserIndex(index => userList.get()[index])
-const selectedUserName = createComputed([selectedUser], (user) => {
+const selectedUserName = createComputed(() => {
+  const user = selectedUser()
   return user.userName
 })
 

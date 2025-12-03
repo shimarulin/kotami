@@ -1,11 +1,10 @@
 import { Accessor, createState } from 'ags'
 
-import { createDisposeManager } from '@libs/gnim-extensions'
-import { type DesktopFileInfo } from '@providers/sessions'
-import { useLoginStorageService } from '@services/LoginStorageService'
-import { LoginStorageRecord } from '@services/LoginStorageService/types'
-import { useUserListService } from '@services/UserListService'
-import { UserListItem } from '@services/UserListService/types'
+import { createDisposeManager } from '../../libs/gnim-extensions'
+import { type DesktopFileInfo } from '../../providers/sessions'
+import { useLoginStorageService } from '../../services/LoginStorageService'
+import { LoginStorageRecord } from '../../services/LoginStorageService/types'
+import { useUserService } from '../../services'
 
 import { createSessionList } from './createSessionList'
 
@@ -21,24 +20,26 @@ const setSelectedSessionIndexByPath = (path: string) => {
 }
 
 const getCashedSessionByUser = (cachedLoginStorageRecord: Accessor<LoginStorageRecord | null>,
-  selectedUser: Accessor<UserListItem>,
+  userName: string,
 ) => {
   const sessions = cachedLoginStorageRecord.get()?.sessions
-  const userName = selectedUser.get().userName
   return sessions && sessions[userName]
 }
 
 const useSessionListService = () => {
   const [disposes, disposeSessionListService] = createDisposeManager()
   const { cachedLoginStorageRecord } = useLoginStorageService()
-  const { selectedUser } = useUserListService()
+  const userService = useUserService()
+
   if (sessionList.get().length === 0) {
     setSessionList(createSessionList())
   }
 
   // TODO: fill from active session
   const activeSessionRecord: string | undefined = undefined
-  const selectedSessionRecord: string | undefined = getCashedSessionByUser(cachedLoginStorageRecord, selectedUser)
+  const selectedSessionRecord: string | undefined = userService.currentUser?.name
+    ? getCashedSessionByUser(cachedLoginStorageRecord, userService.currentUser.name)
+    : undefined
 
   if (activeSessionRecord && selectedSessionIndex.get() < 0) {
     setSelectedSessionIndexByPath(activeSessionRecord)
@@ -50,18 +51,23 @@ const useSessionListService = () => {
     setSelectedSessionIndex(0)
   }
 
-  disposes.push(selectedUser.subscribe(() => {
-    const user = selectedUser.get()
-    const loginCache = cachedLoginStorageRecord.get()
-    const cachedSessionPath = loginCache && loginCache.sessions[user.userName]
+  // Listen to user changes from GObject service
+  const userChangedHandler = userService.connect('user-selected', () => {
+    const user = userService.currentUser
+    if (user) {
+      const loginCache = cachedLoginStorageRecord.get()
+      const cachedSessionPath = loginCache && loginCache.sessions[user.name]
 
-    if (cachedSessionPath) {
-      setSelectedSessionIndexByPath(cachedSessionPath)
+      if (cachedSessionPath) {
+        setSelectedSessionIndexByPath(cachedSessionPath)
+      }
+      else {
+        setSelectedSessionIndex(0)
+      }
     }
-    else {
-      setSelectedSessionIndex(0)
-    }
-  }))
+  })
+
+  disposes.push(() => userService.disconnect(userChangedHandler))
 
   return {
     sessionList,
