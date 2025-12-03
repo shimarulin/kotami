@@ -1,48 +1,23 @@
 import { Accessor, createComputed } from 'ags'
 import { Gtk } from 'ags/gtk4'
 
-import { createComputedArray, toAccessor } from '@libs/gnim-extensions'
-import { useLoginService } from '@services/LoginService'
+import { createComputedArray, toAccessor } from '../../../libs/gnim-extensions'
+import { useAuthService } from '../../../services'
 
 export interface Props {
   cssClasses?: string[] | Accessor<string[]>
 }
 
 export default function ErrorMessage({ cssClasses }: Props) {
-  const { unlockInSeconds: unlockInSec, remainingAttempts, isLockedOut, isLogginError } = useLoginService()
+  const authService = useAuthService()
 
-  const message = createComputed([
-    isLockedOut,
-    remainingAttempts,
-    unlockInSec,
-    isLogginError,
-  ], (
-    isLockedOutValue,
-    remainingAttemptsValue,
-    unlockInSecondsValue,
-    isLogginErrorValue,
-  ) => {
-    if (!isLogginErrorValue) {
-      return ''
-    }
-    else if (isLockedOutValue) {
-      return `The attempts are over. Wait ${unlockInSecondsValue} seconds`
-    }
-    else {
-      return `Failed to log in. ${remainingAttemptsValue} attempts left`
-    }
-  })
+  // Reactive error message
+  const errorMessage = createComputed(() => authService.errorMessage)
 
-  const messageCssClasses = createComputed([isLockedOut, isLogginError], (isLockedOutValue, isLogginErrorValue) => {
-    if (isLockedOutValue) {
-      return ['warning']
-    }
-    else if (isLogginErrorValue) {
-      return ['error']
-    }
-    else {
-      return []
-    }
+  // Reactive CSS classes based on error state
+  const messageCssClasses = createComputed(() => {
+    const message = errorMessage()
+    return message.length > 0 ? ['error'] : []
   })
 
   return (
@@ -51,7 +26,7 @@ export default function ErrorMessage({ cssClasses }: Props) {
         toAccessor(cssClasses || []),
         messageCssClasses,
       ])}
-      label={message}
+      label={errorMessage}
     />
   )
 }

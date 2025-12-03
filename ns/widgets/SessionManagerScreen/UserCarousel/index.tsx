@@ -5,8 +5,9 @@ import { For, With, createState, onCleanup, createComputed } from 'ags'
 import { Gdk, Gtk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
 
-import { createDisposeManager } from '@libs/gnim-extensions'
-import { useUserListService } from '@services/UserListService'
+import { createDisposeManager } from '../../../libs/gnim-extensions'
+import { useUserService } from '../../../services'
+import { User } from '../../../services/AuthService'
 
 import scss from './style.scss'
 
@@ -23,17 +24,20 @@ const UserNameLabel = (name: string) => (
 )
 
 export default function UserCarousel() {
-  const { userList, selectedUserIndex, setSelectedUserIndex } = useUserListService()
+  const userService = useUserService()
   const [userListCarousel, setUserListCarousel] = createState<Adw.Carousel | null>(null)
+  const [selectedIndex, setSelectedIndex] = createState<number>(0)
+  const [triggerUpdate, setTriggerUpdate] = createState<number>(0) // For triggering updates
 
+  // Navigation button visibility
   const navigationButtonProps: Partial<Gtk.Button> = {
     cursor: new Gdk.Cursor({ name: 'pointer' }),
     cssClasses: ['UserCarouselButton'],
-    visible: userList.get().length > 1,
+    visible: userService.availableUsers.length > 1,
   }
 
   const scrollTo = (index: number, animation: boolean = true) => {
-    const userListCarouselRef = userListCarousel.get()
+    const userListCarouselRef = userListCarousel()
     if (userListCarouselRef) {
       const targetPage = userListCarouselRef.get_nth_page(index)
       userListCarouselRef.scroll_to(targetPage, animation)
@@ -42,10 +46,20 @@ export default function UserCarousel() {
 
   const [disposes, dispose] = createDisposeManager()
 
-  disposes.push(selectedUserIndex.subscribe(() => {
-    const position = selectedUserIndex.get()
-    scrollTo(position)
-  }))
+  // Listen to user selection changes
+  const userSelectedHandler = userService.connect('user-selected', () => {
+    // Update carousel position when user is selected
+    const currentUser = userService.currentUser
+    if (currentUser) {
+      const index = userService.availableUsers.findIndex(u => u.name === currentUser.name)
+      if (index >= 0) {
+        setSelectedIndex(index)
+        scrollTo(index)
+      }
+    }
+  })
+
+  disposes.push(() => userService.disconnect(userSelectedHandler))
 
   onCleanup(() => {
     dispose()
@@ -56,13 +70,13 @@ export default function UserCarousel() {
       <Gtk.Button
         iconName="go-previous"
         onClicked={() => {
-          const userListCarouselRef = userListCarousel.get()
+          const userListCarouselRef = userListCarousel()
           if (userListCarouselRef) {
-            if (userListCarouselRef.position > 0) {
-              setSelectedUserIndex(Math.ceil(userListCarouselRef.position) - 1)
-            }
-            else {
-              setSelectedUserIndex(userList.get().length - 1)
+            const currentPos = Math.ceil(userListCarouselRef.position)
+            const newIndex = currentPos > 0 ? currentPos - 1 : userService.availableUsers.length - 1
+            setSelectedIndex(newIndex)
+            if (userService.availableUsers[newIndex]) {
+              userService.selectUser(userService.availableUsers[newIndex])
             }
           }
         }}
@@ -78,45 +92,49 @@ export default function UserCarousel() {
           allowLongSwipes={true}
           onRealize={(carousel) => {
             setUserListCarousel(carousel)
-            scrollTo(selectedUserIndex.get(), false)
+            scrollTo(selectedIndex(), false)
           }}
           onPageChanged={(carousel) => {
-            setSelectedUserIndex(Math.round(carousel.position))
+            const newIndex = Math.round(carousel.position)
+            setSelectedIndex(newIndex)
+            if (userService.availableUsers[newIndex]) {
+              userService.selectUser(userService.availableUsers[newIndex])
+            }
           }}
         >
-          <For each={userList}>
-            {(user, index) => (
+          <For each={createComputed(() => userService.availableUsers)}>
+            {(user: User, index) => (
               <Gtk.Box
-                cssClasses={createComputed(
-                  [selectedUserIndex, index],
-                  (n, i) => ['UserCarouselSlide', ...(n === i ? ['UserCarouselSlideActive'] : [])],
-                )}
+                cssClasses={createComputed(() => {
+                  const selected = selectedIndex()
+                  return ['UserCarouselSlide', ...(selected === index() ? ['UserCarouselSlideActive'] : [])]
+                })}
                 orientation={Gtk.Orientation.VERTICAL}
                 halign={Gtk.Align.CENTER}
                 vexpand={false}
-                cursor={createComputed(
-                  [userList],
-                  arr => arr.length > 1 ? new Gdk.Cursor({ name: 'pointer' }) : new Gdk.Cursor({ name: 'default' }),
-                )}
+                cursor={userService.availableUsers.length > 1
+                  ? new Gdk.Cursor({ name: 'pointer' })
+                  : new Gdk.Cursor({ name: 'default' })
+                }
                 widthRequest={220}
                 heightRequest={270}
-                opacity={createComputed(
-                  [selectedUserIndex, index],
-                  (n, i) => n === i ? 1 : 0.5,
-                )}
+                opacity={createComputed(() => {
+                  const selected = selectedIndex()
+                  return selected === index() ? 1 : 0.5
+                })}
               >
                 <Gtk.GestureClick
                   onReleased={() => {
-                    setSelectedUserIndex(index.get())
+                    setSelectedIndex(index())
+                    userService.selectUser(user)
                   }}
                 />
                 <Adw.Avatar
                   size={172}
-                  text={user.realName}
+                  text={user.realName || user.name}
                   showInitials={true}
-                  customImage={user.userPicture}
-                >
-                </Adw.Avatar>
+                  customImage={user.avatar ? Gdk.Texture.new_from_filename(user.avatar) : undefined}
+                />
                 <Gtk.Box
                   cssClasses={['UserCarouselCaptionContainer']}
                   orientation={Gtk.Orientation.VERTICAL}
@@ -124,26 +142,34 @@ export default function UserCarousel() {
                   halign={Gtk.Align.CENTER}
                   valign={Gtk.Align.CENTER}
                 >
-                  {user.realName.length > 14 ? user.realName.split(' ').map(UserNameLabel) : UserNameLabel(user.realName)}
+                  {user.realName && user.realName.length > 14
+                    ? user.realName.split(' ').map(UserNameLabel)
+                    : UserNameLabel(user.realName || user.name)
+                  }
                 </Gtk.Box>
               </Gtk.Box>
             )}
           </For>
         </Adw.Carousel>
         <With value={userListCarousel}>
-          {value => value instanceof Adw.Carousel && <Adw.CarouselIndicatorDots carousel={value} visible={createComputed([userList], arr => arr.length > 1)} /> }
+          {value => value instanceof Adw.Carousel && (
+            <Adw.CarouselIndicatorDots
+              carousel={value}
+              visible={userService.availableUsers.length > 1}
+            />
+          )}
         </With>
       </Gtk.Box>
       <Gtk.Button
         iconName="go-next"
         onClicked={() => {
-          const userListCarouselRef = userListCarousel.get()
+          const userListCarouselRef = userListCarousel()
           if (userListCarouselRef) {
-            if (userListCarouselRef.position < userList.get().length - 1) {
-              setSelectedUserIndex(Math.floor(userListCarouselRef.position) + 1)
-            }
-            else {
-              setSelectedUserIndex(0)
+            const currentPos = Math.floor(userListCarouselRef.position)
+            const newIndex = currentPos < userService.availableUsers.length - 1 ? currentPos + 1 : 0
+            setSelectedIndex(newIndex)
+            if (userService.availableUsers[newIndex]) {
+              userService.selectUser(userService.availableUsers[newIndex])
             }
           }
         }}

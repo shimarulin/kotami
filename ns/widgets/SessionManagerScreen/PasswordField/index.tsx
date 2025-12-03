@@ -4,12 +4,9 @@ import { Accessor, createComputed, onCleanup } from 'ags'
 import { Gtk } from 'ags/gtk4'
 import app from 'ags/gtk4/app'
 
-import { createComputedArray, createDisposeManager, toAccessor } from '@libs/gnim-extensions'
-import { usePamFaillockConf } from '@providers/pam-faillock'
-import { useLoginService } from '@services/LoginService'
+import { createComputedArray, createDisposeManager, toAccessor } from '../../../libs/gnim-extensions'
+import { useAuthService } from '../../../services'
 
-import { createCountdownTimer } from './createCountdownTimer'
-import { createPulseTimer } from './createPulseTimer'
 import scss from './style.scss'
 
 app.apply_css(scss)
@@ -19,61 +16,33 @@ export interface PasswordFieldProps {
 }
 
 export default function PasswordField({ cssClasses }: PasswordFieldProps) {
-  const pamConfig = usePamFaillockConf()
-  const { isLoggingIn, isLockedOut, isWaiting, isLogginError, fraction, login, resetError, setUnlockInSeconds, setFraction, resetRemainingAttempts } = useLoginService()
-  const startCountdown = createCountdownTimer(pamConfig.unlock_time, setUnlockInSeconds, setFraction, resetRemainingAttempts)
-  const { startPulseTimer, stopPulseTimer } = createPulseTimer()
+  const authService = useAuthService()
   const [disposes, dispose] = createDisposeManager()
 
-  const messageCssClasses = createComputed([isLogginError], (isLogginErrorValue) => {
-    if (isLogginErrorValue) {
-      return ['error']
-    }
-    else {
-      return []
-    }
+  // Reactive error state
+  const hasError = createComputed(() => authService.errorMessage.length > 0)
+  const isAuthenticating = createComputed(() => authService.isAuthenticating)
+
+  const messageCssClasses = createComputed([hasError], (hasErrorValue) => {
+    return hasErrorValue ? ['error'] : []
   })
 
-  let progressBar: Gtk.ProgressBar
-  const pulseHandler = () => {
-    if (isLoggingIn.get()) {
-      startPulseTimer(progressBar)
-    }
-    else {
-      stopPulseTimer()
-    }
+  // Get selected user for authentication
+  const getSelectedUser = () => {
+    // TODO: Integrate with UserService to get selected user
+    // For now, use a mock user
+    return { name: 'user' }
   }
-  const countdownHandler = () => {
-    if (isLockedOut.get()) {
-      startCountdown(progressBar)
-    }
-  }
-
-  disposes.push(isLoggingIn.subscribe(pulseHandler))
-  disposes.push(isLockedOut.subscribe(countdownHandler))
-
-  onCleanup(() => {
-    dispose()
-  })
 
   return (
     <Gtk.Overlay>
       <Gtk.PasswordEntry
         $={(passwordEntry) => {
-          disposes.push(isWaiting.subscribe(() => {
+          disposes.push(isAuthenticating.subscribe(() => {
             /**
-             * The following code avoids the warning:
-             *
-             * (gjs:99251): Gtk-WARNING **: 22:46:54.436: GtkText - did not receive a focus-out event.
-             * If you handle this event, you must return
-             * GDK_EVENT_PROPAGATE so the default handler
-             * gets the event as well
-             *
-             * when changing only the "sensitive" property:
-             *
-             * sensitive={isWaiting(val => !val)}
+             * Handle authentication state changes
              */
-            if (isWaiting.get()) {
+            if (authService.isAuthenticating) {
               GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                 passwordEntry.focusable = false
                 passwordEntry.editable = false
@@ -85,7 +54,9 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
               passwordEntry.focusable = true
               passwordEntry.editable = true
               passwordEntry.sensitive = true
-              passwordEntry.grab_focus()
+              if (!authService.isAuthenticated) {
+                passwordEntry.grab_focus()
+              }
             }
           }))
         }}
@@ -97,19 +68,21 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
         showPeekIcon={true}
         canFocus={true}
         onActivate={({ text }) => {
-          login(text)
+          const user = getSelectedUser()
+          if (user) {
+            authService.authenticate(user.name, text)
+          }
         }}
-        onNotifyText={() => resetError()}
+        onNotifyText={() => {
+          // Clear error when user starts typing
+          authService.clearError()
+        }}
         onRealize={(passwordEntry) => {
           passwordEntry.grab_focus()
         }}
       />
       <Gtk.ProgressBar
         $type="overlay"
-        $={(self) => {
-          progressBar = self
-          countdownHandler()
-        }}
         cssClasses={['horizontal', 'PasswordFieldProgress']}
         valign={Gtk.Align.END}
         orientation={Gtk.Orientation.HORIZONTAL}
@@ -118,8 +91,7 @@ export default function PasswordField({ cssClasses }: PasswordFieldProps) {
         marginBottom={3}
         canTarget={false}
         pulseStep={0.15}
-        fraction={fraction}
-        visible={isWaiting}
+        visible={isAuthenticating}
       />
     </Gtk.Overlay>
   )
