@@ -1,4 +1,6 @@
 import GObject, { register, property, signal } from "gnim/gobject"
+import { getAvailableUsers } from "@providers/users"
+import { createImagePainitable } from "@utils/createImagePainitable"
 import { User } from "./AuthService"
 
 /**
@@ -34,28 +36,26 @@ export class UserService extends GObject.Object {
     this.isLoading = true
 
     try {
-      // TODO: Integrate with actual system user providers
-      // For now, simulate loading
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Get users from system passwd file
+      const passwdRecords = getAvailableUsers()
 
-      const users: User[] = [
-        {
-          name: "user",
-          uid: 1000,
-          gid: 1000,
-          home: "/home/user",
-          shell: "/bin/bash",
-          realName: "Default User"
-        },
-        {
-          name: "admin",
-          uid: 1001,
-          gid: 1001,
-          home: "/home/admin",
-          shell: "/bin/bash",
-          realName: "Administrator"
+      // Convert PasswdRecord[] to User[] with avatar loading
+      const users: User[] = passwdRecords.map(passwdRecord => {
+        // Try to find user avatar
+        const avatar = createImagePainitable(`/var/lib/AccountsService/icons/${passwdRecord.username}`) ||
+                      createImagePainitable(`${passwdRecord.home}/.face`)
+
+        return {
+          name: passwdRecord.username,
+          uid: passwdRecord.uid,
+          gid: passwdRecord.gid,
+          home: passwdRecord.home,
+          shell: passwdRecord.shell,
+          realName: passwdRecord.gecos.fullname || passwdRecord.username,
+          avatar: avatar ? `/var/lib/AccountsService/icons/${passwdRecord.username}` ||
+                          `${passwdRecord.home}/.face` : undefined
         }
-      ]
+      })
 
       this.availableUsers = users
       this.usersLoaded(users)
@@ -123,6 +123,10 @@ let userServiceInstance: UserService | null = null
 export const getUserService = () => {
   if (!userServiceInstance) {
     userServiceInstance = new UserService()
+    // Auto-load users when service is first created
+    userServiceInstance.loadUsers().catch(error => {
+      console.error('Failed to load users:', error)
+    })
   }
   return userServiceInstance
 }
