@@ -2,7 +2,7 @@ import GLib from 'gi://GLib'
 
 import { Gtk } from 'ags/gtk4'
 
-import { useUserListService } from '@services/UserListService'
+import { useUserService } from '../../../services'
 
 export function createCountdownTimer(
   intervalInSeconds: number,
@@ -32,13 +32,13 @@ export function createCountdownTimer(
   }
 
   function start(progressBar: Gtk.ProgressBar) {
-    const { selectedUserName } = useUserListService()
-    const userIndex = selectedUserName.get()
+    const userService = useUserService()
+    const userName = userService.currentUser?.name || 'unknown'
     // TODO: Get start time from PAM faillock per user
     const startTimeInSeconds = GLib.get_monotonic_time() / 1000000
     progressBar.set_inverted(true)
-    const onTick = createTicker(userIndex, startTimeInSeconds)
-    tickCallbackIdMap[userIndex] = progressBar.add_tick_callback(onTick)
+    const onTick = createTicker(userName, startTimeInSeconds)
+    tickCallbackIdMap[userName] = progressBar.add_tick_callback(onTick)
   }
 
   return start
